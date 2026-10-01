@@ -561,3 +561,73 @@
   color:#000;
   font-weight:700;
 }
+
+
+/* =========================================================
+   RitaQ© · Gestión de Usuarios · refuerzo de legibilidad v4
+   ========================================================= */
+
+/* NIF/CIF en el listado: más ancho y SIEMPRE en una sola línea */
+.gu-table th:nth-child(3),
+.gu-table td:nth-child(3){
+  min-width:170px !important;
+  width:170px !important;
+  white-space:nowrap !important;
+}
+
+/* Contacto también gana espacio para evitar cortes innecesarios */
+.gu-table th:nth-child(4),
+.gu-table td:nth-child(4){
+  min-width:210px !important;
+}
+
+/* Los DATOS, no los títulos, se fuerzan a negro y negrita */
+.gu-table td,
+.gu-table td *,
+.gu-field input,
+.gu-field textarea,
+.gu-field select,
+.gu-field select option,
+.gu-filtros input,
+.gu-filtros select,
+.gu-filtros select option,
+.gu-check,
+.gu-check span,
+.gu-import-box textarea{
+  color:#000 !important;
+  font-weight:700 !important;
+}
+
+/* El contenido escrito de los campos queda especialmente nítido */
+.gu-field input,
+.gu-field textarea,
+.gu-field select{
+  font-weight:700 !important;
+  color:#000 !important;
+}
+
+/* Los títulos/etiquetas conservan la identidad azul y peso normal */
+.gu-field > label,
+.gu-logo-box > label,
+.gu-products-title,
+.gu-table th{
+  color:#083f5b !important;
+  font-weight:400 !important;
+}
+
+/* Los placeholders NO se confunden con datos reales */
+.gu-field input::placeholder,
+.gu-field textarea::placeholder,
+.gu-filtros input::placeholder,
+.gu-import-box textarea::placeholder{
+  color:#7f909a !important;
+  font-weight:400 !important;
+  opacity:1 !important;
+}
+
+/* NIF y contacto en el formulario: ancho completo */
+.gu-field:has(input[name="nif"]),
+.gu-field:has(input[name="contacto"]){
+  grid-column:1 / -1 !important;
+  width:100% !important;
+}
