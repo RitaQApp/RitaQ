@@ -7,6 +7,7 @@
   <meta name="theme-color" content="#0b5f82">
   <title>RitaQ© | Entorno Consultor</title>
   <link rel="stylesheet" href="css/consultor.css">
+  <link rel="stylesheet" href="css/gestion_usuarios.css">
 </head>
 <body>
 
@@ -54,7 +55,7 @@
         <div class="section-kicker">RitaQ© · CONSULTOR</div>
         <h1 id="tituloModulo"></h1>
         <div class="cyan-rule"></div>
-        <div class="module-placeholder">
+        <div id="contenidoModulo" class="module-placeholder">
           <p>Contenido pendiente de definir.</p>
         </div>
       </section>
@@ -140,6 +141,8 @@
 </div>
 
 <script src="js/sesion.js"></script>
+<script src="data/maestro_clientes.js"></script>
+<script src="js/gestion_usuarios.js"></script>
 <script>
 (function(){
   const menu = document.getElementById("menuConsultor");
@@ -166,6 +169,15 @@
     inicio.hidden = true;
     modulo.hidden = false;
     titulo.textContent = btn.dataset.title || "";
+
+    const contenido = document.getElementById("contenidoModulo");
+    if(btn.dataset.num === "0" && window.RitaQGestionUsuarios){
+      contenido.className = "";
+      window.RitaQGestionUsuarios.mostrar(contenido);
+    }else{
+      contenido.className = "module-placeholder";
+      contenido.innerHTML = "<p>Contenido pendiente de definir.</p>";
+    }
   });
 
   const salir = document.getElementById("btnSalir");
