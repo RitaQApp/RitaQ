@@ -2,34 +2,185 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#0b5f82">
   <title>RitaQ© | Entorno Consultor</title>
-  <link rel="stylesheet" href="css/ritaq.css">
-  <style>
-    .placeholder{width:min(1000px,calc(100% - 40px));margin:70px auto;background:#fff;border-radius:12px;box-shadow:var(--sombra);padding:44px}
-    .placeholder h1{font-size:46px}.placeholder p{font-size:25px;line-height:1.45}
-    .sesion-datos{margin:26px 0;padding:20px;border-left:8px solid var(--cian);background:#f1f8fb;font-size:23px}
-    .salir{min-height:56px;padding:10px 28px;border:0;border-radius:6px;background:var(--azul-marca);color:#fff;font:700 22px Tecnico,Arial;cursor:pointer}
-  </style>
+  <link rel="stylesheet" href="css/consultor.css">
 </head>
 <body>
-  <main class="placeholder">
-    <img src="assets/RitaQ.png" alt="RitaQ©" style="width:min(360px,80vw);height:auto">
-    <span class="linea-cian" style="margin-top:28px"></span>
-    <h1>Entorno Consultor</h1>
-    <p>La puerta de entrada ya funciona. El panel del consultor se diseñará a partir de aquí.</p>
-    <div id="sesionDatos" class="sesion-datos"></div>
-    <button id="btnSalir" class="salir" type="button">CERRAR SESIÓN</button>
-  </main>
-  <script src="js/actividad.js"></script>
-  <script src="js/sesion.js"></script>
-  <script>
-    const s=RitaQSesion.obtener();
-    if(!s || !["SUPERADMIN","CONSULTOR"].includes(s.perfil)){location.replace("index.html");}
-    else{
-      document.getElementById("sesionDatos").innerHTML=`<b>${s.usuario}</b><br>${s.perfilNombre}`;
-      document.getElementById("btnSalir").onclick=()=>{RitaQSesion.cerrar();location.replace("index.html")};
-    }
-  </script>
+
+<div class="app-shell">
+
+  <header class="topbar">
+    <div class="brand">
+      <img src="assets/RitaQ_transparente.png" alt="RitaQ©" class="brand-logo">
+      <div class="brand-copy">
+        <div class="mode">ENTORNO CONSULTOR</div>
+        <div class="subtitle">Sistema de Aseguramiento y Gestión de la Calidad</div>
+      </div>
+    </div>
+
+    <div class="session">
+      <div class="session-user">
+        <span class="session-label">USUARIO</span>
+        <strong id="usuarioActivo">ALS</strong>
+      </div>
+      <button id="btnSalir" class="logout" type="button">SALIR</button>
+    </div>
+  </header>
+
+  <div class="workspace">
+
+    <main class="work-area">
+      <section class="welcome" id="panelInicio">
+        <div class="section-kicker">RitaQ©</div>
+        <h1>Entorno Consultor</h1>
+        <div class="cyan-rule"></div>
+
+        <p class="lead">
+          Selecciona un área de trabajo en la banda lateral.
+        </p>
+
+        <div class="empty-state">
+          <div class="empty-title">Área de trabajo</div>
+          <p>
+            Esta zona mostrará los datos, herramientas y resultados del módulo seleccionado.
+          </p>
+        </div>
+      </section>
+
+      <section class="module-view" id="panelModulo" hidden>
+        <div class="section-kicker">RitaQ© · CONSULTOR</div>
+        <h1 id="tituloModulo"></h1>
+        <div class="cyan-rule"></div>
+        <div class="module-placeholder">
+          <p>Contenido pendiente de definir.</p>
+        </div>
+      </section>
+    </main>
+
+    <aside class="side-menu" aria-label="Áreas del entorno consultor">
+      <div class="side-head">
+        <span>ÁREAS DE TRABAJO</span>
+      </div>
+
+      <nav class="menu-scroll" id="menuConsultor">
+        <button class="menu-btn admin" type="button" data-num="0" data-title="Gestión de Usuarios">
+          <span class="num">0</span><span class="label">Gestión de Usuarios</span>
+        </button>
+
+        <div class="menu-separator"></div>
+
+        <button class="menu-btn" type="button" data-num="1" data-title="Información Documentada y Sistema">
+          <span class="num">1</span><span class="label">Información Documentada y Sistema</span>
+        </button>
+
+        <button class="menu-btn" type="button" data-num="2" data-title="Políticas y Compromisos">
+          <span class="num">2</span><span class="label">Políticas y Compromisos</span>
+        </button>
+
+        <button class="menu-btn" type="button" data-num="3" data-title="Análisis de Riesgos y Oportunidades">
+          <span class="num">3</span><span class="label">Análisis de Riesgos y Oportunidades</span>
+        </button>
+
+        <button class="menu-btn" type="button" data-num="4" data-title="Grupos de Interés">
+          <span class="num">4</span><span class="label">Grupos de Interés</span>
+        </button>
+
+        <button class="menu-btn" type="button" data-num="5" data-title="Legislación y Normativa">
+          <span class="num">5</span><span class="label">Legislación y Normativa</span>
+        </button>
+
+        <button class="menu-btn" type="button" data-num="6" data-title="Indicadores y Objetivos (CMI)">
+          <span class="num">6</span><span class="label">Indicadores y Objetivos (CMI)</span>
+        </button>
+
+        <button class="menu-btn" type="button" data-num="7" data-title="Recursos Humanos">
+          <span class="num">7</span><span class="label">Recursos Humanos</span>
+        </button>
+
+        <button class="menu-btn" type="button" data-num="8" data-title="Infraestructura y Mantenimiento">
+          <span class="num">8</span><span class="label">Infraestructura y Mantenimiento</span>
+        </button>
+
+        <button class="menu-btn" type="button" data-num="9" data-title="Producción, Equipos y Servicios">
+          <span class="num">9</span><span class="label">Producción, Equipos y Servicios</span>
+        </button>
+
+        <button class="menu-btn" type="button" data-num="10" data-title="Mejora y Calidad">
+          <span class="num">10</span><span class="label">Mejora y Calidad</span>
+        </button>
+
+        <button class="menu-btn" type="button" data-num="11" data-title="Impacto Ambiental">
+          <span class="num">11</span><span class="label">Impacto Ambiental</span>
+        </button>
+
+        <button class="menu-btn" type="button" data-num="12" data-title="Otros">
+          <span class="num">12</span><span class="label">Otros</span>
+        </button>
+
+        <div class="menu-separator"></div>
+
+        <button class="menu-btn notices" type="button" data-num="13" data-title="Avisos y Comunicaciones">
+          <span class="num">13</span>
+          <span class="label">Avisos y Comunicaciones</span>
+          <span class="counter" id="contadorAvisos" hidden>0</span>
+        </button>
+      </nav>
+
+      <div class="side-foot">
+        <span>RitaQ©</span>
+        <span class="dot">·</span>
+        <span>LifeLearning Consultoría</span>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<script src="js/sesion.js"></script>
+<script>
+(function(){
+  const menu = document.getElementById("menuConsultor");
+  const inicio = document.getElementById("panelInicio");
+  const modulo = document.getElementById("panelModulo");
+  const titulo = document.getElementById("tituloModulo");
+  const contador = document.getElementById("contadorAvisos");
+
+  // Contador preparado. Si el valor es 0, desaparece.
+  window.RitaQ = window.RitaQ || {};
+  window.RitaQ.setAvisosPendientes = function(cantidad){
+    const n = Math.max(0, Number(cantidad) || 0);
+    contador.textContent = String(n);
+    contador.hidden = n === 0;
+  };
+
+  menu.addEventListener("click", function(ev){
+    const btn = ev.target.closest(".menu-btn");
+    if(!btn) return;
+
+    menu.querySelectorAll(".menu-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    inicio.hidden = true;
+    modulo.hidden = false;
+    titulo.textContent = btn.dataset.title || "";
+  });
+
+  const salir = document.getElementById("btnSalir");
+  salir.addEventListener("click", function(){
+    try{
+      if(window.RitaSesion && typeof window.RitaSesion.cerrar === "function"){
+        window.RitaSesion.cerrar();
+      }else{
+        sessionStorage.clear();
+        localStorage.removeItem("ritaq_sesion");
+      }
+    }catch(e){}
+    window.location.href = "index.html";
+  });
+})();
+</script>
 </body>
 </html>
