@@ -1,1 +1,538 @@
-.gestion-usuarios{width:100%;max-width:1180px}.gu-toolbar{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 22px}.gu-tab{min-height:46px;padding:8px 16px;border:1px solid #0b5f82;background:#fff;color:#0b5f82;font-weight:700;cursor:pointer}.gu-tab:hover,.gu-tab.active{background:#0b5f82;color:#fff}.gu-resumen{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px}.gu-stat{border:1px solid #d5dee3;background:#fbfcfc;padding:16px}.gu-stat strong{display:block;color:#083f5b;font-size:30px;font-weight:400}.gu-stat span{color:#748691;font-size:16px}.gu-filtros{display:flex;gap:10px;align-items:center;margin:0 0 14px}.gu-filtros input{flex:1;min-width:220px;height:48px;border:1px solid #b8c8d2;padding:0 14px;font:19px Tecnico,Arial,sans-serif}.gu-filtros select{height:48px;border:1px solid #b8c8d2;background:#fff;padding:0 12px;font:17px Tecnico,Arial,sans-serif}.gu-table-wrap{overflow:auto;border:1px solid #d5dee3}.gu-table{width:100%;border-collapse:collapse;min-width:900px;background:#fff}.gu-table th{background:#eef3f6;color:#083f5b;text-align:left;padding:11px 12px;border-bottom:1px solid #cbd6dd;font-size:16px}.gu-table td{padding:11px 12px;border-bottom:1px solid #e3e8eb;vertical-align:top;font-size:16px}.gu-code{font-weight:700;color:#0b5f82}.gu-pending{color:#9a6a20;font-style:italic}.gu-mini{border:1px solid #0b5f82;background:#fff;color:#0b5f82;padding:6px 10px;cursor:pointer;font-weight:700}.gu-mini:hover{background:#0b5f82;color:#fff}.gu-chip{display:inline-block;margin:2px 3px 2px 0;padding:3px 7px;border:1px solid #aebec8;color:#4c6472;font-size:13px}.gu-form{border:1px solid #d5dee3;background:#fbfcfc;padding:22px}.gu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px 18px}.gu-field.full{grid-column:1/-1}.gu-field label{display:block;margin-bottom:6px;color:#083f5b;font-weight:700;font-size:17px}.gu-field input,.gu-field textarea,.gu-field select{width:100%;border:1px solid #b8c8d2;background:#fff;padding:10px 12px;font:18px Tecnico,Arial,sans-serif}.gu-field input,.gu-field select{height:48px}.gu-field textarea{min-height:92px;resize:vertical}.gu-products{grid-column:1/-1;border-top:1px solid #d5dee3;margin-top:4px;padding-top:15px}.gu-products-title{color:#083f5b;font-weight:700;margin-bottom:9px}.gu-checks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 12px}.gu-check{display:flex;gap:7px;align-items:center;font-size:16px}.gu-check input{width:18px;height:18px}.gu-logo-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;grid-column:1/-1}.gu-logo-box{border:1px dashed #9fb1bd;background:#fff;padding:14px;min-height:126px}.gu-logo-box label{display:block;color:#083f5b;font-weight:700;margin-bottom:8px}.gu-logo-preview{display:flex;align-items:center;justify-content:center;min-height:72px;background:#f5f7f8;margin-top:8px}.gu-logo-preview img{max-width:100%;max-height:72px}.gu-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}.gu-primary,.gu-secondary{min-height:48px;padding:8px 18px;font:700 17px Tecnico,Arial,sans-serif;cursor:pointer}.gu-primary{border:1px solid #0b5f82;background:#0b5f82;color:#fff}.gu-secondary{border:1px solid #0b5f82;background:#fff;color:#0b5f82}.gu-note{padding:12px 14px;border-left:4px solid #12aee5;background:#f3f9fc;color:#526b79;margin:0 0 18px;line-height:1.35}.gu-import-box{border:1px solid #d5dee3;background:#fbfcfc;padding:20px}.gu-import-box textarea{width:100%;min-height:230px;border:1px solid #b8c8d2;padding:12px;font:16px Tecnico,Arial,sans-serif;resize:vertical}.gu-import-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0}.gu-file{border:1px solid #b8c8d2;background:#fff;padding:10px;max-width:100%}.gu-message{display:none;margin:14px 0 0;padding:11px 13px;border-left:4px solid #12aee5;background:#f3f9fc}.gu-message.show{display:block}.gu-message.error{border-left-color:#9a3d3d;background:#fff5f5;color:#7c3030}.gu-detail-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:16px}.gu-detail-head h2{margin:0;color:#083f5b;font-size:29px;font-weight:400}.gu-back{border:0;background:none;color:#0b5f82;text-decoration:underline;cursor:pointer;font:inherit}@media(max-width:900px){.gu-resumen{grid-template-columns:repeat(2,minmax(0,1fr))}.gu-grid{grid-template-columns:1fr}.gu-field.full,.gu-products,.gu-logo-grid{grid-column:auto}.gu-checks{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:600px){.gu-resumen{grid-template-columns:1fr 1fr}.gu-logo-grid{grid-template-columns:1fr}.gu-checks{grid-template-columns:1fr}.gu-filtros{align-items:stretch;flex-direction:column}.gu-filtros input,.gu-filtros select{width:100%}}
+
+/* RitaQ© · Gestión de Usuarios
+   Usuarios cliente = empresas / organizaciones.
+   Estética deliberadamente integrada con el Entorno Consultor. */
+
+.gestion-usuarios{
+  width:100%;
+  max-width:1240px;
+}
+
+.gu-portada{
+  width:100%;
+  max-width:980px;
+}
+
+.gu-portada-intro{
+  margin:0 0 24px;
+  color:#718591;
+  font-size:19px;
+  line-height:1.45;
+}
+
+.gu-gordito{
+  width:100%;
+  min-height:92px;
+  display:grid;
+  grid-template-columns:72px minmax(0,1fr) 42px;
+  align-items:center;
+  gap:14px;
+  padding:14px 18px;
+  border:1px solid #0b5f82;
+  background:#fff;
+  color:#0b5f82;
+  font:inherit;
+  text-align:left;
+  cursor:pointer;
+}
+
+.gu-gordito:hover{
+  background:#f4f9fb;
+  border-color:#12aee5;
+}
+
+.gu-gordito-num{
+  width:48px;
+  height:48px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid #0b5f82;
+  border-radius:50%;
+  font-size:22px;
+}
+
+.gu-gordito-title{
+  display:block;
+  font-size:24px;
+  line-height:1.1;
+}
+
+.gu-gordito-sub{
+  display:block;
+  margin-top:6px;
+  color:#718591;
+  font-size:16px;
+  line-height:1.25;
+}
+
+.gu-gordito-arrow{
+  font-size:30px;
+  text-align:right;
+}
+
+.gu-toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:9px;
+  margin:0 0 20px;
+}
+
+.gu-tab{
+  min-height:44px;
+  padding:8px 15px;
+  border:1px solid #0b5f82;
+  background:#fff;
+  color:#0b5f82;
+  font:inherit;
+  font-size:16px;
+  cursor:pointer;
+}
+
+.gu-tab:hover,
+.gu-tab.active{
+  background:#0b5f82;
+  color:#fff;
+}
+
+.gu-tab.volver{
+  margin-left:auto;
+  border-color:#8da2ae;
+  color:#617783;
+}
+
+.gu-tab.volver:hover{
+  background:#617783;
+  color:#fff;
+}
+
+.gu-resumen{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-bottom:18px;
+}
+
+.gu-stat{
+  min-height:84px;
+  border:1px solid #d3dee4;
+  background:#fbfcfd;
+  padding:13px 15px;
+}
+
+.gu-stat strong{
+  display:block;
+  color:#083f5b;
+  font-size:29px;
+  font-weight:400;
+  line-height:1;
+}
+
+.gu-stat span{
+  display:block;
+  margin-top:7px;
+  color:#718591;
+  font-size:15px;
+}
+
+.gu-filtros{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin:0 0 12px;
+}
+
+.gu-filtros input,
+.gu-filtros select{
+  height:46px;
+  border:1px solid #b8c8d2;
+  background:#fff;
+  color:#294b5d;
+  font:inherit;
+  font-size:17px;
+}
+
+.gu-filtros input{
+  flex:1;
+  min-width:240px;
+  padding:0 13px;
+}
+
+.gu-filtros select{
+  padding:0 12px;
+}
+
+.gu-table-wrap{
+  overflow:auto;
+  border:1px solid #d3dee4;
+  background:#fff;
+}
+
+.gu-table{
+  width:100%;
+  min-width:980px;
+  border-collapse:collapse;
+}
+
+.gu-table th{
+  padding:10px 11px;
+  border-bottom:1px solid #c8d5dc;
+  background:#eef3f6;
+  color:#083f5b;
+  text-align:left;
+  font-size:15px;
+  font-weight:400;
+}
+
+.gu-table td{
+  padding:10px 11px;
+  border-bottom:1px solid #e2e8ec;
+  color:#405d6c;
+  vertical-align:top;
+  font-size:15px;
+}
+
+.gu-table tbody tr:hover{
+  background:#f8fbfc;
+}
+
+.gu-code{
+  color:#0b5f82;
+  font-weight:700;
+}
+
+.gu-pending{
+  color:#98712f;
+  font-style:italic;
+}
+
+.gu-chip{
+  display:inline-block;
+  margin:1px 3px 2px 0;
+  padding:2px 6px;
+  border:1px solid #afbec7;
+  color:#516b79;
+  font-size:12px;
+  white-space:nowrap;
+}
+
+.gu-mini{
+  min-height:34px;
+  padding:5px 9px;
+  border:1px solid #0b5f82;
+  background:#fff;
+  color:#0b5f82;
+  font:inherit;
+  font-size:14px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+.gu-mini:hover{
+  background:#0b5f82;
+  color:#fff;
+}
+
+.gu-form{
+  border:1px solid #d3dee4;
+  background:#fbfcfd;
+  padding:20px;
+}
+
+.gu-form-title{
+  margin:0 0 17px;
+  padding-bottom:10px;
+  border-bottom:1px solid #cdd9df;
+  color:#083f5b;
+  font-size:25px;
+  font-weight:400;
+}
+
+.gu-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px 17px;
+}
+
+.gu-field.full{
+  grid-column:1/-1;
+}
+
+.gu-field label{
+  display:block;
+  margin-bottom:5px;
+  color:#083f5b;
+  font-size:16px;
+}
+
+.gu-field input,
+.gu-field textarea,
+.gu-field select{
+  width:100%;
+  border:1px solid #b8c8d2;
+  background:#fff;
+  color:#294b5d;
+  font:inherit;
+  font-size:17px;
+}
+
+.gu-field input,
+.gu-field select{
+  height:46px;
+  padding:0 11px;
+}
+
+.gu-field textarea{
+  min-height:86px;
+  padding:10px 11px;
+  resize:vertical;
+}
+
+.gu-products{
+  grid-column:1/-1;
+  margin-top:4px;
+  padding-top:14px;
+  border-top:1px solid #d3dee4;
+}
+
+.gu-products-title{
+  margin-bottom:9px;
+  color:#083f5b;
+  font-size:18px;
+}
+
+.gu-checks{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px 12px;
+}
+
+.gu-check{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  color:#405d6c;
+  font-size:15px;
+}
+
+.gu-check input{
+  width:17px;
+  height:17px;
+}
+
+.gu-logo-grid{
+  grid-column:1/-1;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:15px;
+}
+
+.gu-logo-box{
+  min-height:132px;
+  padding:13px;
+  border:1px dashed #9fb1bd;
+  background:#fff;
+}
+
+.gu-logo-box label{
+  display:block;
+  margin-bottom:8px;
+  color:#083f5b;
+  font-size:16px;
+}
+
+.gu-logo-preview{
+  min-height:70px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-top:8px;
+  background:#f4f7f8;
+  color:#8a9aa3;
+}
+
+.gu-logo-preview.blanco{
+  background:#0b5f82;
+  color:#d8e7ee;
+}
+
+.gu-logo-preview img{
+  max-width:100%;
+  max-height:68px;
+  object-fit:contain;
+}
+
+.gu-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:9px;
+  justify-content:flex-end;
+  margin-top:17px;
+}
+
+.gu-primary,
+.gu-secondary{
+  min-height:45px;
+  padding:7px 16px;
+  font:inherit;
+  font-size:16px;
+  cursor:pointer;
+}
+
+.gu-primary{
+  border:1px solid #0b5f82;
+  background:#0b5f82;
+  color:#fff;
+}
+
+.gu-secondary{
+  border:1px solid #0b5f82;
+  background:#fff;
+  color:#0b5f82;
+}
+
+.gu-note{
+  margin:0 0 16px;
+  padding:11px 13px;
+  border-left:4px solid #12aee5;
+  background:#f2f8fb;
+  color:#526b79;
+  font-size:15px;
+  line-height:1.4;
+}
+
+.gu-import-box{
+  padding:18px;
+  border:1px solid #d3dee4;
+  background:#fbfcfd;
+}
+
+.gu-import-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+  margin-bottom:12px;
+}
+
+.gu-file{
+  max-width:100%;
+  padding:9px;
+  border:1px solid #b8c8d2;
+  background:#fff;
+  font:inherit;
+}
+
+.gu-import-box textarea{
+  width:100%;
+  min-height:220px;
+  padding:11px;
+  border:1px solid #b8c8d2;
+  background:#fff;
+  color:#294b5d;
+  font:15px "Tecnico",Arial,sans-serif;
+  resize:vertical;
+}
+
+.gu-message{
+  display:none;
+  margin-top:13px;
+  padding:10px 12px;
+  border-left:4px solid #12aee5;
+  background:#f2f8fb;
+  color:#526b79;
+}
+
+.gu-message.show{
+  display:block;
+}
+
+.gu-message.error{
+  border-left-color:#9a3d3d;
+  background:#fff5f5;
+  color:#7c3030;
+}
+
+.gu-detail-head{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  align-items:flex-start;
+  margin-bottom:14px;
+}
+
+.gu-detail-head h2{
+  margin:0;
+  color:#083f5b;
+  font-size:26px;
+  font-weight:400;
+}
+
+.gu-back{
+  border:0;
+  background:none;
+  color:#0b5f82;
+  font:inherit;
+  text-decoration:underline;
+  cursor:pointer;
+}
+
+@media(max-width:920px){
+  .gu-resumen{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .gu-grid{
+    grid-template-columns:1fr;
+  }
+
+  .gu-field.full,
+  .gu-products,
+  .gu-logo-grid{
+    grid-column:auto;
+  }
+
+  .gu-checks{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
+@media(max-width:620px){
+  .gu-gordito{
+    grid-template-columns:54px minmax(0,1fr) 26px;
+    padding:12px;
+  }
+
+  .gu-gordito-num{
+    width:40px;
+    height:40px;
+    font-size:18px;
+  }
+
+  .gu-gordito-title{
+    font-size:20px;
+  }
+
+  .gu-resumen{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .gu-filtros{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .gu-filtros input,
+  .gu-filtros select{
+    width:100%;
+  }
+
+  .gu-checks,
+  .gu-logo-grid{
+    grid-template-columns:1fr;
+  }
+
+  .gu-tab.volver{
+    margin-left:0;
+  }
+}
