@@ -1,26 +1,15 @@
-RitaQ© · Puerta de entrada v2
+RitaQ© · Puerta de entrada v3
 
-Rediseño visual alineado con Rita© / AQS de Aerogyrocopter.
+Cambio realizado:
+- Rediseño visual completo de la puerta de entrada.
+- Estética minimalista y técnica, coherente con Rita© / AQS.
+- Tipografía Tecnico real.
+- Se mantiene la lógica de autenticación, sesión, perfiles y registro de actividad.
+- Usuario provisional: ALS
+- Contraseña provisional: pollo33
 
-ACCESO DE PRUEBA
-Usuario: ALS
-Contraseña: pollo33
-
-PERFILES PREVISTOS
-- SUPERADMIN: Megarrecontra-jefe que sabe "muchismo"
-- CONSULTOR: Consultor
-- EMPRESA: Empresa Cliente
-
-REGLA TERMINOLÓGICA
-SAGC = Sistema de Aseguramiento y Gestión de la Calidad.
-No utilizar "Sistema de Gestión de la Calidad" ni SGC.
-
-TIPOGRAFÍA
-Familia Tecnico incluida en assets:
-- tecnico_regular.ttf
-- tecnico_bold.ttf
-- tecnico_regularitalic.ttf
-- tecnico_bolditalic.ttf
-
-La autenticación y el registro de actividad siguen siendo provisionales/locales.
-El rediseño no modifica la lógica de acceso, perfiles, rutas ni registro de actividad.
+Archivos funcionales de autenticación NO modificados:
+- config/usuarios.js
+- js/auth.js
+- js/sesion.js
+- js/actividad.js

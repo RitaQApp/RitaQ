@@ -28,262 +28,244 @@
 }
 
 :root{
-  --azul-marca:#156082;
-  --azul-profundo:#104c68;
-  --azul-tinta:#183f55;
-  --cian:#00aeef;
+  --azul:#4f6885;
+  --azul-oscuro:#3f5874;
+  --azul-tinta:#38536f;
+  --cian:#18a9df;
+  --fondo:#f2f3f4;
   --blanco:#ffffff;
-  --fondo:#f5f8fa;
-  --texto:#24485b;
-  --texto-suave:#718792;
-  --borde:#b8c8d0;
-  --borde-foco:#00aeef;
-  --error:#9a2e2e;
-  --error-fondo:#fff5f5;
-  --ok:#276447;
-  --ok-fondo:#f0f8f3;
-  --sombra:0 20px 55px rgba(16,76,104,.12);
+  --borde:#b8c3cd;
+  --borde-claro:#d9dfe4;
+  --texto:#314b64;
+  --texto-suave:#7a8792;
+  --error:#963737;
+  --error-fondo:#fff6f6;
+  --ok:#32634b;
+  --ok-fondo:#f2f8f4;
 }
 
 *{box-sizing:border-box}
-html,body{margin:0;min-height:100%}
+
+html,body{
+  margin:0;
+  min-height:100%;
+}
+
 body{
+  font-family:"Tecnico",Arial,sans-serif;
   color:var(--texto);
   background:var(--fondo);
-  font-family:"Tecnico",Arial,sans-serif;
   font-size:20px;
 }
-button,input{font:inherit}
-button{font-family:"Tecnico",Arial,sans-serif}
 
-/* PUERTA DE ENTRADA */
+button,input{
+  font:inherit;
+  font-family:"Tecnico",Arial,sans-serif;
+}
+
 .pagina-acceso{
   min-height:100vh;
-  overflow-x:hidden;
-  background:#fff;
-}
-
-.login-layout{
-  min-height:100vh;
-  display:grid;
-  grid-template-columns:minmax(430px,42%) minmax(0,58%);
-}
-
-.brand-panel{
-  position:relative;
-  min-height:100vh;
+  padding:18px;
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:70px 58px 92px;
-  background:var(--azul-marca);
+}
+
+.ritaq-shell{
+  width:min(1180px,100%);
+  min-height:720px;
+  background:var(--blanco);
+  border:2px solid var(--azul);
+  box-shadow:0 12px 32px rgba(35,55,75,.16);
+  display:flex;
+  flex-direction:column;
+}
+
+.cabecera-ritaq{
+  min-height:245px;
+  padding:28px 42px 24px;
+  background:var(--azul);
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+
+.logo-ritaq{
+  display:block;
+  width:min(390px,80vw);
+  height:auto;
+  border:0;
+}
+
+.titulo-sistema{
+  margin-top:18px;
+  font-size:27px;
+  line-height:1.15;
+  letter-spacing:.25px;
   color:#fff;
 }
 
-.brand-content{
-  width:min(540px,100%);
-  transform:translateY(-2vh);
+.zona-acceso{
+  flex:1;
+  padding:34px 42px 26px;
 }
 
-.brand-logo{
-  display:block;
-  width:min(500px,100%);
-  height:auto;
-  margin:0 0 40px;
-}
-
-.brand-rule{
-  display:block;
-  width:82px;
-  height:4px;
-  margin:0 0 30px 4px;
-  background:var(--cian);
-}
-
-.brand-system{
-  margin:0 0 18px 4px;
-  max-width:520px;
-  font-size:31px;
-  line-height:1.25;
-  font-weight:400;
-  letter-spacing:.15px;
-}
-
-.brand-acronym{
-  margin:0 0 0 4px;
-  color:rgba(255,255,255,.72);
-  font-size:21px;
-  font-weight:700;
-  letter-spacing:2.4px;
-}
-
-.brand-foot{
-  position:absolute;
-  left:62px;
-  bottom:32px;
-  margin:0;
-  color:rgba(255,255,255,.62);
-  font-size:16px;
-  letter-spacing:.25px;
-}
-
-.access-panel{
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  padding:70px clamp(54px,7vw,130px);
-  background:#fff;
-}
-
-.access-wrap{
-  width:min(620px,100%);
-  margin:0 auto;
-}
-
-.access-header{
-  margin-bottom:44px;
-}
-
-.access-kicker{
-  margin:0 0 8px;
-  color:var(--azul-marca);
-  font-size:21px;
-  font-weight:700;
-  letter-spacing:1.2px;
+.titulo-bloque{
+  margin-bottom:18px;
+  border-bottom:2px solid var(--azul);
 }
 
 h1{
   margin:0;
-  color:var(--azul-tinta);
-  font-size:58px;
+  padding:0 0 8px;
+  color:var(--azul);
+  font-size:32px;
   line-height:1;
   font-weight:400;
-  letter-spacing:-.4px;
 }
 
-.access-rule{
+.form-acceso{
+  padding:8px 0 0;
+}
+
+.campo{
+  margin-bottom:15px;
+}
+
+.campo label{
   display:block;
-  width:100%;
-  height:1px;
-  margin-top:26px;
-  background:linear-gradient(90deg,var(--azul-marca) 0 130px,#d7e1e6 130px 100%);
-}
-
-.login-form{
-  width:100%;
-}
-
-.field-group{
-  margin-bottom:27px;
-}
-
-.field-group label{
-  display:block;
-  margin:0 0 10px;
+  margin:0 0 7px;
   color:var(--azul-tinta);
-  font-size:22px;
+  font-size:20px;
   font-weight:700;
 }
 
-.field-group input{
+.campo input{
   width:100%;
-  height:68px;
-  padding:10px 18px;
-  border:1.5px solid var(--borde);
-  border-radius:2px;
+  height:64px;
+  padding:10px 16px;
+  border:1px solid var(--borde);
+  border-radius:0;
   outline:none;
   background:#fff;
-  color:var(--azul-tinta);
-  font-size:26px;
-  transition:border-color .14s ease,box-shadow .14s ease,background .14s ease;
+  color:#253f58;
+  font-size:25px;
+  transition:border-color .12s ease, background .12s ease, box-shadow .12s ease;
 }
 
-.field-group input:hover{
-  border-color:#8faab7;
-}
-
-.field-group input:focus{
-  border-color:var(--borde-foco);
-  box-shadow:0 0 0 3px rgba(0,174,239,.11);
-  background:#fbfeff;
-}
-
-.field-group input::placeholder{
-  color:#9aaab2;
+.campo input::placeholder{
+  color:#9aa3aa;
   opacity:1;
 }
 
-.password-wrap{
+.campo input:hover{
+  border-color:#8ea1b1;
+}
+
+.campo input:focus{
+  border-color:var(--azul);
+  background:#f6f9fc;
+  box-shadow:inset 4px 0 0 var(--cian);
+}
+
+.password-box{
   position:relative;
 }
 
-.password-wrap input{
-  padding-right:104px;
+.password-box input{
+  padding-right:105px;
 }
 
-.password-toggle{
+.btn-ver{
   position:absolute;
   top:1px;
   right:1px;
-  height:66px;
-  min-width:86px;
-  padding:0 16px;
+  height:62px;
+  width:92px;
   border:0;
-  border-left:1px solid #ccd8de;
-  background:#f7fafb;
-  color:var(--azul-marca);
+  border-left:1px solid var(--borde-claro);
+  background:#f5f7f8;
+  color:var(--azul);
   font-size:18px;
   font-weight:700;
   cursor:pointer;
 }
 
-.password-toggle:hover{
-  background:#eef6f9;
+.btn-ver:hover{
+  background:#edf2f5;
+}
+
+.acciones{
+  margin-top:18px;
+  display:flex;
+  justify-content:flex-start;
 }
 
 .btn-entrar{
-  width:100%;
-  min-height:68px;
-  margin-top:8px;
-  border:1px solid var(--azul-marca);
-  border-radius:2px;
-  background:var(--azul-marca);
+  min-width:190px;
+  height:54px;
+  padding:0 24px;
+  border:0;
+  border-radius:0;
+  background:var(--azul);
   color:#fff;
-  font-size:24px;
+  font-size:22px;
   font-weight:700;
-  letter-spacing:1.1px;
+  letter-spacing:.4px;
   cursor:pointer;
-  transition:background .14s ease,border-color .14s ease,transform .08s ease;
+  box-shadow:0 4px 0 var(--azul-oscuro);
+  transition:background .12s ease, transform .08s ease, box-shadow .08s ease;
 }
 
 .btn-entrar:hover{
-  background:var(--azul-profundo);
-  border-color:var(--azul-profundo);
+  background:#5b7593;
 }
 
-.btn-entrar:active{transform:translateY(1px)}
-.btn-entrar:disabled{opacity:.64;cursor:wait}
+.btn-entrar:active{
+  transform:translateY(2px);
+  box-shadow:0 2px 0 var(--azul-oscuro);
+}
+
+.btn-entrar:disabled{
+  opacity:.62;
+  cursor:wait;
+}
 
 .mensaje-login{
   display:none;
-  margin:-2px 0 22px;
-  padding:13px 15px;
+  margin:10px 0 0;
+  padding:11px 14px;
   border-left:4px solid currentColor;
-  font-size:19px;
-  line-height:1.35;
+  font-size:18px;
+  line-height:1.3;
 }
+
 .mensaje-login.visible{display:block}
 .mensaje-login.error{background:var(--error-fondo);color:var(--error)}
 .mensaje-login.ok{background:var(--ok-fondo);color:var(--ok)}
 
-.access-foot{
-  margin:26px 0 0;
-  color:var(--texto-suave);
+.pie-ritaq{
+  min-height:68px;
+  padding:14px 24px;
+  border-top:1px solid #e0e3e6;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  color:#7b8288;
   font-size:16px;
   text-align:center;
 }
 
-/* Compatibilidad con las pantallas provisionales de los dos entornos */
+.pie-ritaq .punto{
+  color:var(--cian);
+  font-weight:700;
+}
+
+/* Pantallas provisionales de los dos entornos: se conserva compatibilidad */
 .acceso-shell{
   width:min(1180px,calc(100% - 44px));
   margin:0 auto;
@@ -295,7 +277,6 @@ h1{
   padding:38px;
   background:#fff;
   border:1px solid #d4dfe4;
-  box-shadow:var(--sombra);
 }
 .linea-cian{
   display:block;
@@ -315,54 +296,54 @@ h1{
   font-size:16px;
   text-align:center;
 }
-.pie-pagina .separador{color:var(--cian);font-weight:700}
+.pie-pagina .separador{
+  color:var(--cian);
+  font-weight:700;
+}
 
-@media(max-width:980px){
-  .login-layout{grid-template-columns:1fr}
-  .brand-panel{
-    min-height:auto;
-    padding:38px 34px 34px;
-    justify-content:flex-start;
+@media(max-width:760px){
+  .pagina-acceso{
+    padding:0;
+    background:#fff;
   }
-  .brand-content{
+
+  .ritaq-shell{
+    min-height:100vh;
+    border:0;
+    box-shadow:none;
+  }
+
+  .cabecera-ritaq{
+    min-height:215px;
+    padding:26px 22px 22px;
+  }
+
+  .logo-ritaq{
+    width:min(330px,84vw);
+  }
+
+  .titulo-sistema{
+    font-size:22px;
+  }
+
+  .zona-acceso{
+    padding:30px 24px 24px;
+  }
+
+  h1{
+    font-size:29px;
+  }
+
+  .campo input{
+    height:60px;
+    font-size:23px;
+  }
+
+  .btn-ver{
+    height:58px;
+  }
+
+  .btn-entrar{
     width:100%;
-    transform:none;
-    display:grid;
-    grid-template-columns:minmax(230px,360px) 1fr;
-    grid-template-areas:
-      "logo system"
-      "logo acronym";
-    column-gap:38px;
-    align-items:end;
   }
-  .brand-logo{grid-area:logo;margin:0;width:100%}
-  .brand-rule{display:none}
-  .brand-system{grid-area:system;margin:0 0 10px;font-size:25px}
-  .brand-acronym{grid-area:acronym;margin:0;font-size:18px;align-self:start}
-  .brand-foot{display:none}
-  .access-panel{min-height:auto;padding:58px 46px 64px}
-  .access-wrap{width:min(650px,100%)}
-}
-
-@media(max-width:680px){
-  .brand-panel{padding:26px 24px 28px}
-  .brand-content{display:block}
-  .brand-logo{width:min(350px,100%);margin:0 0 22px}
-  .brand-system{font-size:23px;line-height:1.25}
-  .brand-acronym{font-size:16px}
-  .access-panel{padding:42px 24px 52px}
-  .access-header{margin-bottom:34px}
-  .access-kicker{font-size:19px}
-  h1{font-size:48px}
-  .field-group label{font-size:21px}
-  .field-group input{height:64px;font-size:24px}
-  .password-toggle{height:62px}
-  .btn-entrar{min-height:64px;font-size:23px}
-}
-
-@media(max-width:420px){
-  .brand-logo{width:285px}
-  .brand-system{font-size:21px}
-  h1{font-size:44px}
-  .access-panel{padding-left:18px;padding-right:18px}
 }
