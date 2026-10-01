@@ -1,15 +1,10 @@
-RitaQ© · Puerta de entrada v3
+RitaQ© · Puerta de entrada v4 FOTO
 
-Cambio realizado:
-- Rediseño visual completo de la puerta de entrada.
-- Estética minimalista y técnica, coherente con Rita© / AQS.
-- Tipografía Tecnico real.
-- Se mantiene la lógica de autenticación, sesión, perfiles y registro de actividad.
+- Diseño de acceso con fotografía real de archivadores ISO.
+- Logo RitaQ© sin recuadro.
+- Escritorio: fotografía/marca a la izquierda y acceso blanco a la derecha.
+- Móvil: cabecera fotográfica y formulario debajo.
+- Tipografía Tecnico.
+- No se ha modificado la lógica de autenticación, sesión, perfiles ni actividad.
 - Usuario provisional: ALS
 - Contraseña provisional: pollo33
-
-Archivos funcionales de autenticación NO modificados:
-- config/usuarios.js
-- js/auth.js
-- js/sesion.js
-- js/actividad.js
