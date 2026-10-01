@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>RitaQ© | Entorno Consultor</title>
+  <link rel="stylesheet" href="css/ritaq.css">
+  <style>
+    .placeholder{width:min(1000px,calc(100% - 40px));margin:70px auto;background:#fff;border-radius:12px;box-shadow:var(--sombra);padding:44px}
+    .placeholder h1{font-size:46px}.placeholder p{font-size:25px;line-height:1.45}
+    .sesion-datos{margin:26px 0;padding:20px;border-left:8px solid var(--cian);background:#f1f8fb;font-size:23px}
+    .salir{min-height:56px;padding:10px 28px;border:0;border-radius:6px;background:var(--azul-marca);color:#fff;font:700 22px Tecnico,Arial;cursor:pointer}
+  </style>
+</head>
+<body>
+  <main class="placeholder">
+    <img src="assets/RitaQ.png" alt="RitaQ©" style="width:min(360px,80vw);height:auto">
+    <span class="linea-cian" style="margin-top:28px"></span>
+    <h1>Entorno Consultor</h1>
+    <p>La puerta de entrada ya funciona. El panel del consultor se diseñará a partir de aquí.</p>
+    <div id="sesionDatos" class="sesion-datos"></div>
+    <button id="btnSalir" class="salir" type="button">CERRAR SESIÓN</button>
+  </main>
+  <script src="js/actividad.js"></script>
+  <script src="js/sesion.js"></script>
+  <script>
+    const s=RitaQSesion.obtener();
+    if(!s || !["SUPERADMIN","CONSULTOR"].includes(s.perfil)){location.replace("index.html");}
+    else{
+      document.getElementById("sesionDatos").innerHTML=`<b>${s.usuario}</b><br>${s.perfilNombre}`;
+      document.getElementById("btnSalir").onclick=()=>{RitaQSesion.cerrar();location.replace("index.html")};
+    }
+  </script>
+</body>
+</html>
