@@ -147,9 +147,10 @@
   height:46px;
   border:1px solid #b8c8d2;
   background:#fff;
-  color:#294b5d;
+  color:#000;
   font:inherit;
   font-size:17px;
+  font-weight:700;
 }
 
 .gu-filtros input{
@@ -187,9 +188,10 @@
 .gu-table td{
   padding:10px 11px;
   border-bottom:1px solid #e2e8ec;
-  color:#405d6c;
+  color:#000;
   vertical-align:top;
   font-size:15px;
+  font-weight:700;
 }
 
 .gu-table tbody tr:hover{
@@ -197,7 +199,7 @@
 }
 
 .gu-code{
-  color:#0b5f82;
+  color:#000;
   font-weight:700;
 }
 
@@ -211,8 +213,9 @@
   margin:1px 3px 2px 0;
   padding:2px 6px;
   border:1px solid #afbec7;
-  color:#516b79;
+  color:#000;
   font-size:12px;
+  font-weight:700;
   white-space:nowrap;
 }
 
@@ -258,6 +261,12 @@
   grid-column:1/-1;
 }
 
+/* NIF/CIF y Persona de contacto: campos más anchos */
+.gu-field:has(input[name="nif"]),
+.gu-field:has(input[name="contacto"]){
+  grid-column:1/-1;
+}
+
 .gu-field label{
   display:block;
   margin-bottom:5px;
@@ -271,9 +280,10 @@
   width:100%;
   border:1px solid #b8c8d2;
   background:#fff;
-  color:#294b5d;
+  color:#000;
   font:inherit;
   font-size:17px;
+  font-weight:700;
 }
 
 .gu-field input,
@@ -534,5 +544,159 @@
 
   .gu-tab.volver{
     margin-left:0;
+  }
+}
+
+
+/* Los datos introducidos se leen en negro/negrita; los placeholders no */
+.gu-field input::placeholder,
+.gu-field textarea::placeholder,
+.gu-filtros input::placeholder{
+  color:#91a1aa;
+  font-weight:400;
+  opacity:1;
+}
+
+.gu-field select option{
+  color:#000;
+  font-weight:700;
+}
+
+
+/* =========================================================
+   RitaQ© · Gestión de Usuarios · refuerzo de legibilidad v4
+   ========================================================= */
+
+/* NIF/CIF en el listado: más ancho y SIEMPRE en una sola línea */
+.gu-table th:nth-child(3),
+.gu-table td:nth-child(3){
+  min-width:170px !important;
+  width:170px !important;
+  white-space:nowrap !important;
+}
+
+/* Contacto también gana espacio para evitar cortes innecesarios */
+.gu-table th:nth-child(4),
+.gu-table td:nth-child(4){
+  min-width:210px !important;
+}
+
+/* Los DATOS, no los títulos, se fuerzan a negro y negrita */
+.gu-table td,
+.gu-table td *,
+.gu-field input,
+.gu-field textarea,
+.gu-field select,
+.gu-field select option,
+.gu-filtros input,
+.gu-filtros select,
+.gu-filtros select option,
+.gu-check,
+.gu-check span,
+.gu-import-box textarea{
+  color:#000 !important;
+  font-weight:700 !important;
+}
+
+/* El contenido escrito de los campos queda especialmente nítido */
+.gu-field input,
+.gu-field textarea,
+.gu-field select{
+  font-weight:700 !important;
+  color:#000 !important;
+}
+
+/* Los títulos/etiquetas conservan la identidad azul y peso normal */
+.gu-field > label,
+.gu-logo-box > label,
+.gu-products-title,
+.gu-table th{
+  color:#083f5b !important;
+  font-weight:400 !important;
+}
+
+/* Los placeholders NO se confunden con datos reales */
+.gu-field input::placeholder,
+.gu-field textarea::placeholder,
+.gu-filtros input::placeholder,
+.gu-import-box textarea::placeholder{
+  color:#7f909a !important;
+  font-weight:400 !important;
+  opacity:1 !important;
+}
+
+/* NIF y contacto en el formulario: ancho completo */
+.gu-field:has(input[name="nif"]),
+.gu-field:has(input[name="contacto"]){
+  grid-column:1 / -1 !important;
+  width:100% !important;
+}
+
+
+/* =========================================================
+   RitaQ© · Gestión de Usuarios · cuatro gorditos v5
+   ========================================================= */
+
+.gu-portada{
+  max-width:1180px;
+}
+
+.gu-gorditos-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px;
+  align-items:stretch;
+}
+
+.gu-gorditos-grid .gu-gordito{
+  width:100%;
+  height:100%;
+  min-height:118px;
+  margin:0;
+}
+
+.gu-subhead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  margin:0 0 18px;
+  padding-bottom:12px;
+  border-bottom:1px solid #d3dee4;
+}
+
+.gu-subhead h2{
+  margin:0;
+  color:#083f5b;
+  font-size:28px;
+  font-weight:400;
+}
+
+.gu-subhead .gu-tab.volver{
+  margin-left:auto;
+  flex:0 0 auto;
+}
+
+/* Tablas específicas: datos negros, negrita y sin cortes absurdos */
+.gu-table-info td,
+.gu-table-credenciales td,
+.gu-table-uso td{
+  color:#000 !important;
+  font-weight:700 !important;
+}
+
+.gu-table-info th:nth-child(3),
+.gu-table-info td:nth-child(3),
+.gu-table-credenciales th:nth-child(3),
+.gu-table-credenciales td:nth-child(3),
+.gu-table-credenciales th:nth-child(4),
+.gu-table-credenciales td:nth-child(4){
+  white-space:nowrap !important;
+  min-width:150px !important;
+}
+
+@media(max-width:820px){
+  .gu-gorditos-grid{
+    grid-template-columns:1fr;
   }
 }

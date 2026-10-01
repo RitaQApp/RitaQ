@@ -92,18 +92,251 @@
           Gestión de las empresas cliente con acceso a RitaQ©.
         </p>
 
-        <button class="gu-gordito" type="button" data-gu-tab="lista">
-          <span class="gu-gordito-num">1</span>
+        <div class="gu-gorditos-grid">
 
-          <span>
-            <span class="gu-gordito-title">Alta / edición de usuarios</span>
-            <span class="gu-gordito-sub">
-              Alta individual, alta en grupo y mantenimiento de empresas cliente.
+          <button class="gu-gordito" type="button" data-gu-tab="lista">
+            <span class="gu-gordito-num">1</span>
+
+            <span>
+              <span class="gu-gordito-title">Alta / edición de usuarios</span>
+              <span class="gu-gordito-sub">
+                Alta individual, alta en grupo y modificación de clientes existentes.
+              </span>
             </span>
-          </span>
 
-          <span class="gu-gordito-arrow">›</span>
+            <span class="gu-gordito-arrow">›</span>
+          </button>
+
+          <button class="gu-gordito" type="button" data-gu-tab="informacion">
+            <span class="gu-gordito-num">2</span>
+
+            <span>
+              <span class="gu-gordito-title">Información de usuarios</span>
+              <span class="gu-gordito-sub">
+                Consulta de los datos maestros de cada empresa cliente.
+              </span>
+            </span>
+
+            <span class="gu-gordito-arrow">›</span>
+          </button>
+
+          <button class="gu-gordito" type="button" data-gu-tab="credenciales">
+            <span class="gu-gordito-num">3</span>
+
+            <span>
+              <span class="gu-gordito-title">Usuarios y contraseñas</span>
+              <span class="gu-gordito-sub">
+                Consulta directa de las credenciales de acceso de cada usuario.
+              </span>
+            </span>
+
+            <span class="gu-gordito-arrow">›</span>
+          </button>
+
+          <button class="gu-gordito" type="button" data-gu-tab="uso">
+            <span class="gu-gordito-num">4</span>
+
+            <span>
+              <span class="gu-gordito-title">Uso de RitaQ© por usuario</span>
+              <span class="gu-gordito-sub">
+                Accesos y actividad registrada de cada usuario en RitaQ©.
+              </span>
+            </span>
+
+            <span class="gu-gordito-arrow">›</span>
+          </button>
+
+        </div>
+      </div>`;
+  }
+
+  function barraVolver(titulo) {
+    return `
+      <div class="gu-subhead">
+        <h2>${titulo}</h2>
+        <button class="gu-tab volver" type="button" data-gu-tab="portada">
+          VOLVER
         </button>
+      </div>`;
+  }
+
+  function mostrarInformacionUsuarios() {
+    host.innerHTML = `
+      <div class="gestion-usuarios">
+        ${barraVolver("Información de usuarios")}
+
+        <div class="gu-filtros">
+          <input id="guInfoBuscar" type="search"
+            placeholder="Buscar por código, empresa, NIF, contacto o correo">
+        </div>
+
+        <div id="guInfoTabla"></div>
+      </div>`;
+
+    const input = document.getElementById("guInfoBuscar");
+
+    function pintar() {
+      const q = (input.value || "").trim().toLowerCase();
+
+      const lista = clientes.filter(function (cliente) {
+        return !q || [
+          cliente.codigo_cliente,
+          cliente.razon_social,
+          cliente.nif,
+          cliente.contacto,
+          cliente.email,
+          cliente.telefono,
+          cliente.direccion
+        ].join(" ").toLowerCase().includes(q);
+      });
+
+      document.getElementById("guInfoTabla").innerHTML = `
+        <div class="gu-table-wrap">
+          <table class="gu-table gu-table-info">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Usuario / empresa cliente</th>
+                <th>NIF/CIF</th>
+                <th>Persona de contacto</th>
+                <th>Teléfono</th>
+                <th>Correo</th>
+                <th>Productos</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${lista.map(function (cliente) {
+                return `
+                  <tr>
+                    <td>${cliente.codigo_cliente
+                      ? escapar(cliente.codigo_cliente)
+                      : "SIN CÓDIGO"}</td>
+                    <td>${escapar(cliente.razon_social || "")}</td>
+                    <td>${escapar(cliente.nif || "")}</td>
+                    <td>${escapar(cliente.contacto || "")}</td>
+                    <td>${escapar(cliente.telefono || "")}</td>
+                    <td>${escapar(cliente.email || "")}</td>
+                    <td>${productosComoChips(cliente.productos)}</td>
+                  </tr>`;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    input.addEventListener("input", pintar);
+    pintar();
+  }
+
+  function mostrarCredenciales() {
+    host.innerHTML = `
+      <div class="gestion-usuarios">
+        ${barraVolver("Usuarios y contraseñas")}
+
+        <div class="gu-note">
+          En este apartado RitaQ© muestra las credenciales almacenadas para cada empresa cliente.
+        </div>
+
+        <div class="gu-table-wrap">
+          <table class="gu-table gu-table-credenciales">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Usuario / empresa cliente</th>
+                <th>Usuario de acceso</th>
+                <th>Contraseña</th>
+                <th>Acceso</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${clientes.map(function (cliente) {
+                const usuario = String(cliente.usuario_acceso || "").trim();
+                const password = String(cliente.password_provisional || "").trim();
+
+                return `
+                  <tr>
+                    <td>${escapar(cliente.codigo_cliente || "SIN CÓDIGO")}</td>
+                    <td>${escapar(cliente.razon_social || "")}</td>
+                    <td>${usuario ? escapar(usuario) : '<span class="gu-pending">SIN ASIGNAR</span>'}</td>
+                    <td>${password ? escapar(password) : '<span class="gu-pending">SIN ASIGNAR</span>'}</td>
+                    <td>${cliente.acceso_activo === true ? "ACTIVADO" : "DESACTIVADO"}</td>
+                  </tr>`;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  }
+
+  function mostrarUso() {
+    let actividad = [];
+
+    try {
+      actividad = JSON.parse(localStorage.getItem("RITAQ_ACTIVIDAD") || "[]");
+      if (!Array.isArray(actividad)) actividad = [];
+    } catch (_) {
+      actividad = [];
+    }
+
+    const porUsuario = {};
+
+    actividad.forEach(function (registro) {
+      const usuario = String(registro.usuario || registro.user || "").trim();
+      if (!usuario) return;
+
+      if (!porUsuario[usuario]) {
+        porUsuario[usuario] = {
+          usuario: usuario,
+          accesos: 0,
+          ultimo: ""
+        };
+      }
+
+      porUsuario[usuario].accesos++;
+
+      const fecha = String(registro.fecha || registro.timestamp || "");
+      if (fecha > porUsuario[usuario].ultimo) {
+        porUsuario[usuario].ultimo = fecha;
+      }
+    });
+
+    const filas = clientes.map(function (cliente) {
+      const usuario = String(cliente.usuario_acceso || "").trim();
+      const uso = porUsuario[usuario] || { accesos: 0, ultimo: "" };
+
+      return `
+        <tr>
+          <td>${escapar(cliente.codigo_cliente || "SIN CÓDIGO")}</td>
+          <td>${escapar(cliente.razon_social || "")}</td>
+          <td>${usuario ? escapar(usuario) : '<span class="gu-pending">SIN ASIGNAR</span>'}</td>
+          <td>${uso.accesos}</td>
+          <td>${uso.ultimo ? escapar(uso.ultimo) : '<span class="gu-pending">SIN REGISTRO</span>'}</td>
+        </tr>`;
+    }).join("");
+
+    host.innerHTML = `
+      <div class="gestion-usuarios">
+        ${barraVolver("Uso de RitaQ© por usuario")}
+
+        <div class="gu-note">
+          Este panel queda preparado para explotar el registro de actividad.
+          Sólo mostrará accesos realmente registrados por RitaQ©.
+        </div>
+
+        <div class="gu-table-wrap">
+          <table class="gu-table gu-table-uso">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Usuario / empresa cliente</th>
+                <th>Usuario de acceso</th>
+                <th>Accesos registrados</th>
+                <th>Último acceso registrado</th>
+              </tr>
+            </thead>
+            <tbody>${filas}</tbody>
+          </table>
+        </div>
       </div>`;
   }
 
@@ -714,6 +947,9 @@
       if (destino === "lista") mostrarListado();
       if (destino === "alta") mostrarFormulario(null, true);
       if (destino === "grupo") mostrarAltaGrupo();
+      if (destino === "informacion") mostrarInformacionUsuarios();
+      if (destino === "credenciales") mostrarCredenciales();
+      if (destino === "uso") mostrarUso();
 
       return;
     }
