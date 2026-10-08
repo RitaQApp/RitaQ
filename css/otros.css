@@ -1,0 +1,15 @@
+/* RitaQ© · Menú Otros. Estilos exclusivos de esta página. */
+@font-face{font-family:Tecnico;src:url("../assets/tecnico_regular.ttf") format("truetype");font-display:swap}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:#0b5f82;font-family:Tecnico,Arial,sans-serif}
+.otros-cabecera{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 30px;background:#0b5f82;color:#fff;font-size:22px}
+.otros-cabecera a{color:#fff;font-size:18px;text-underline-offset:4px}
+.otros-contenido{max-width:1100px;margin:auto;padding:40px 30px}
+h1{margin:0;font-size:48px;font-weight:400;color:#083f5b}
+.otros-linea{height:1px;margin:24px 0 30px;background:linear-gradient(90deg,#12aee5 95px,#d5dee3 95px)}
+.otros-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.otros-gordito{display:grid;grid-template-columns:48px minmax(0,1fr);align-items:center;gap:16px;min-height:126px;padding:22px 20px;border:1px solid #0b5f82;background:#fff;color:#0b5f82;font:inherit;font-size:24px;text-align:left;cursor:pointer;overflow-wrap:break-word}
+.otros-gordito:hover{background:#f4f9fb;border-color:#12aee5}
+.otros-gordito:focus-visible{outline:3px solid #12aee5;outline-offset:3px}
+.otros-num{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border:1px solid currentColor;border-radius:50%;font-size:22px}
+@media(max-width:600px){.otros-cabecera{flex-wrap:wrap;padding:18px}.otros-contenido{padding:28px 18px}.otros-grid{gap:12px}.otros-gordito{grid-template-columns:minmax(0,1fr);align-content:start;padding:16px 12px;font-size:20px}.otros-num{width:36px;height:36px;font-size:19px}}

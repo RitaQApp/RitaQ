@@ -9,17 +9,6 @@
   <!-- RITAQ VISUAL V3: menú izquierda + cabecera azul + botones enmarcados -->
   <link rel="stylesheet" href="consultor_visual_v3.css?v=20261001-1800">
   <link rel="stylesheet" href="css/gestion_usuarios.css">
-  <style>
-    /* Otros (12): seis accesos, en tres filas de dos. */
-    .otros-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;width:100%}
-    .otros-gordito{display:grid;grid-template-columns:48px minmax(0,1fr);align-items:center;gap:16px;min-height:126px;padding:22px 20px;border:1px solid var(--blue,#0b5f82);background:#fff;color:var(--blue,#0b5f82);font:inherit;text-align:left;cursor:pointer}
-    .otros-gordito:hover{background:#f4f9fb;border-color:var(--cyan,#12aee5)}
-    .otros-gordito:focus-visible{outline:3px solid var(--cyan,#12aee5);outline-offset:3px}
-    .otros-num{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border:1px solid currentColor;border-radius:50%;font-size:22px}
-    .otros-nombre{font-size:24px;line-height:1.2;overflow-wrap:break-word}
-    @media(max-width:980px){.otros-gordito{grid-template-columns:36px minmax(0,1fr);gap:10px;padding:16px 12px}.otros-num{width:36px;height:36px;font-size:19px}.otros-nombre{font-size:21px}.otros-grid{gap:12px}}
-    @media(max-width:420px){.otros-gordito{grid-template-columns:minmax(0,1fr);align-content:start}.otros-nombre{font-size:19px}}
-  </style>
 </head>
 <body>
 
@@ -152,17 +141,6 @@
   </div>
 </div>
 
-  <template id="plantillaOtros">
-    <div class="otros-grid" aria-label="Servicios de Otros">
-      <button class="otros-gordito" type="button" data-otros="1"><span class="otros-num" aria-hidden="true">1</span><span class="otros-nombre">Planes de Autoprotección</span></button>
-      <button class="otros-gordito" type="button" data-otros="2"><span class="otros-num" aria-hidden="true">2</span><span class="otros-nombre">Planes Puntuales de Seguridad y Evacuación</span></button>
-      <button class="otros-gordito" type="button" data-otros="3"><span class="otros-num" aria-hidden="true">3</span><span class="otros-nombre">Simulacros de Evacuación</span></button>
-      <button class="otros-gordito" type="button" data-otros="4"><span class="otros-num" aria-hidden="true">4</span><span class="otros-nombre">Cálculo de Huella de Carbono</span></button>
-      <button class="otros-gordito" type="button" data-otros="5"><span class="otros-num" aria-hidden="true">5</span><span class="otros-nombre">Auditoría Salarial</span></button>
-      <button class="otros-gordito" type="button" data-otros="6"><span class="otros-num" aria-hidden="true">6</span><span class="otros-nombre">Cálculo de Brecha Salarial</span></button>
-    </div>
-  </template>
-
 <script src="js/sesion.js"></script>
 <script src="data/maestro_clientes.js"></script>
 <script src="js/gestion_usuarios.js"></script>
@@ -185,6 +163,10 @@
   menu.addEventListener("click", function(ev){
     const btn = ev.target.closest(".menu-btn");
     if(!btn) return;
+    if(btn.dataset.num === "12"){
+      window.location.href = "otros.html";
+      return;
+    }
 
     menu.querySelectorAll(".menu-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
@@ -197,9 +179,6 @@
     if(btn.dataset.num === "0" && window.RitaQGestionUsuarios){
       contenido.className = "";
       window.RitaQGestionUsuarios.mostrar(contenido);
-    }else if(btn.dataset.num === "12"){
-      contenido.className = "";
-      contenido.replaceChildren(document.getElementById("plantillaOtros").content.cloneNode(true));
     }else{
       contenido.className = "module-placeholder";
       contenido.innerHTML = "<p>Contenido pendiente de definir.</p>";

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RitaQ© | Otros</title>
+  <link rel="stylesheet" href="css/otros.css?v=20261008-1">
+</head>
+<body>
+  <header class="otros-cabecera"><span>RitaQ© · Entorno Consultor</span><a href="consultor.html">Volver al Área Consultor</a></header>
+  <main class="otros-contenido">
+    <h1>Otros</h1>
+    <div class="otros-linea" aria-hidden="true"></div>
+    <div class="otros-grid" aria-label="Servicios de Otros">
+      <button class="otros-gordito" type="button" data-servicio="1"><span class="otros-num" aria-hidden="true">1</span><span>Planes de Autoprotección</span></button>
+      <button class="otros-gordito" type="button" data-servicio="2"><span class="otros-num" aria-hidden="true">2</span><span>Planes Puntuales de Seguridad y Evacuación</span></button>
+      <button class="otros-gordito" type="button" data-servicio="3"><span class="otros-num" aria-hidden="true">3</span><span>Simulacros de Evacuación</span></button>
+      <button class="otros-gordito" type="button" data-servicio="4"><span class="otros-num" aria-hidden="true">4</span><span>Cálculo de Huella de Carbono</span></button>
+      <button class="otros-gordito" type="button" data-servicio="5"><span class="otros-num" aria-hidden="true">5</span><span>Auditoría Salarial</span></button>
+      <button class="otros-gordito" type="button" data-servicio="6"><span class="otros-num" aria-hidden="true">6</span><span>Cálculo de Brecha Salarial</span></button>
+    </div>
+  </main>
+  <script src="js/sesion.js"></script>
+  <script>
+    const sesion = window.RitaQSesion.obtener();
+    if(!sesion || !["SUPERADMIN", "CONSULTOR"].includes(sesion.perfil)){
+      window.location.replace("index.html");
+    }
+  </script>
+</body>
+</html>
