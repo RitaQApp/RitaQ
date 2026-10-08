@@ -26,37 +26,32 @@
 
   function usuariosDisponibles(){
     const especiales = (window.RITAQ_USUARIOS || []).filter(u => u.activo !== false);
-    const codigos = new Set(especiales.map(u => String(u.codigo || "").toUpperCase()));
-    const empresas = [];
-    for(const cliente of clientesRegistrados()){
-      if(cliente.activo === false || cliente.acceso_activo !== true) continue;
-      const codigo = String(cliente.usuario_acceso || cliente.codigo_cliente || "").trim().toUpperCase();
-      if(!codigo || codigos.has(codigo)) continue;
-      codigos.add(codigo);
-      empresas.push({
-        codigo,
-        nombre: String(cliente.razon_social || codigo),
-        perfil: window.RITAQ_PERFILES.EMPRESA,
-        perfilNombre: "Empresa Cliente",
-        codigoCliente: cliente.codigo_cliente || cliente.id,
-        activo: true,
-        logo: cliente.logo_azul || cliente.logo_blanco || ""
-      });
-    }
+    const empresas = clientesRegistrados().map((cliente, indice) => ({
+      // La selección identifica el registro del maestro, aunque aún no tenga código de acceso.
+      codigo: "EMPRESA:" + String(cliente.id || indice),
+      codigoUsuario: String(cliente.usuario_acceso || cliente.codigo_cliente || cliente.id || "").trim().toUpperCase(),
+      nombre: String(cliente.razon_social || cliente.codigo_cliente || cliente.id || "Empresa"),
+      perfil: window.RITAQ_PERFILES.EMPRESA,
+      perfilNombre: "Empresa Cliente",
+      codigoCliente: cliente.codigo_cliente || cliente.id,
+      activo: cliente.activo !== false,
+      password: cliente.password_provisional || "pollo33",
+      logo: cliente.logo_azul || cliente.logo_blanco || "",
+      logoBlanco: !cliente.logo_azul && !!cliente.logo_blanco
+    }));
     const ordenadas = empresas.sort((a,b) => a.nombre.localeCompare(b.nombre,"es"));
     const lifeLearning = especiales.find(u => String(u.codigo || "").toUpperCase() === "ALS");
-    const otrosEspeciales = especiales.filter(u => u !== lifeLearning);
     const primero = lifeLearning ? [{
       ...lifeLearning,
       nombre: "LifeLearning Consultoría",
-      logo: "assets/lifelearning_logo.png",
+      logo: "assets/lifelearning_logo_azul.png?v=20261008-1811",
       esConsultorPrincipal: true
     }] : [];
-    return [...primero, ...ordenadas, ...otrosEspeciales];
+    return [...primero, ...ordenadas];
   }
 
   function buscarUsuario(codigo){
-    return usuariosDisponibles().find(u => String(u.codigo || "").toUpperCase() === codigo) || null;
+    return usuariosDisponibles().find(u => String(u.codigo || "").toUpperCase() === codigo.toUpperCase()) || null;
   }
 
   function prepararSelector(){
@@ -71,7 +66,7 @@
       destino.replaceChildren();
       if(dato.logo){
         const img = document.createElement("img");
-        img.className = "empresa-mini-logo";
+        img.className = "empresa-mini-logo" + (dato.logoBlanco ? " empresa-logo-blanco" : "");
         img.alt = "";
         img.src = dato.logo;
         img.addEventListener("error", () => img.remove(), {once:true});
@@ -156,8 +151,8 @@
 
   async function autenticar(codigo, password){
     const usuario = buscarUsuario(codigo);
-    if(!usuario) return null;
-    return password === (usuario.perfil === window.RITAQ_PERFILES.EMPRESA ? "pollo33" : usuario.password) ? usuario : null;
+    if(!usuario || usuario.activo === false || password !== usuario.password) return null;
+    return {...usuario, codigo: usuario.codigoUsuario || usuario.codigo};
   }
 
   async function entrar(evento){
