@@ -38,16 +38,17 @@
         <form id="formLogin" class="login-form" autocomplete="on" novalidate>
           <div class="field">
             <label for="usuario">Usuario</label>
-            <input
-              id="usuario"
-              name="usuario"
-              type="text"
-              autocomplete="username"
-              autocapitalize="characters"
-              spellcheck="false"
-              placeholder="Código de usuario"
-              required
-            >
+            <div class="empresa-select" id="empresaSelect">
+              <input id="usuario" name="usuario" type="hidden" value="">
+              <button id="empresaTrigger" class="empresa-trigger" type="button"
+                      aria-haspopup="listbox" aria-expanded="false" aria-controls="empresaOpciones"
+                      aria-label="Usuario: seleccionar empresa">
+                <span id="empresaActual" class="empresa-actual empresa-placeholder">Seleccione su empresa</span>
+                <span class="empresa-flecha" aria-hidden="true">▾</span>
+              </button>
+              <div id="empresaOpciones" class="empresa-opciones" role="listbox"
+                   aria-label="Empresas y usuarios autorizados" hidden></div>
+            </div>
           </div>
 
           <div class="field">
@@ -80,6 +81,7 @@
   </main>
 
   <script src="config/usuarios.js"></script>
+  <script src="data/maestro_clientes.js"></script>
   <script src="js/actividad.js"></script>
   <script src="js/sesion.js"></script>
   <script src="js/auth.js"></script>
