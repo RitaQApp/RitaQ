@@ -9,6 +9,7 @@
 <body>
   <header class="otros-cabecera"><span>RitaQ© · Entorno Consultor</span><a href="consultor.html">Volver al Área Consultor</a></header>
   <main class="otros-contenido">
+    <section id="otrosMenu">
     <h1>Otros</h1>
     <div class="otros-linea" aria-hidden="true"></div>
     <div class="otros-grid" aria-label="Servicios de Otros">
@@ -19,12 +20,45 @@
       <button class="otros-gordito" type="button" data-servicio="5"><span class="otros-num" aria-hidden="true">5</span><span>Auditoría Salarial</span></button>
       <button class="otros-gordito" type="button" data-servicio="6"><span class="otros-num" aria-hidden="true">6</span><span>Cálculo de Brecha Salarial</span></button>
     </div>
+    </section>
+    <section id="otrosAutoproteccion" hidden aria-label="Planes de Autoprotección">
+      <button id="otrosVolver" class="otros-volver" type="button">← Volver a Otros</button>
+      <h1>Planes de Autoprotección</h1>
+      <div class="otros-linea" aria-hidden="true"></div>
+      <div class="otros-grid" aria-label="Opciones de Planes de Autoprotección">
+        <button class="otros-gordito" type="button"><span class="otros-num" aria-hidden="true">1</span><span>ALTA / EDICIÓN DE PLAN NUEVO</span></button>
+        <button class="otros-gordito" type="button"><span class="otros-num" aria-hidden="true">2</span><span>CONSULTA DE UN PLAN DE AUTOPROTECCIÓN</span></button>
+        <button class="otros-gordito" type="button"><span class="otros-num" aria-hidden="true">3</span><span>PLANES EN VIGOR</span></button>
+        <button class="otros-gordito" type="button"><span class="otros-num" aria-hidden="true">4</span><span>HISTÓRICO DE PLANES</span></button>
+      </div>
+    </section>
   </main>
+  <style>
+    .otros-volver{margin:0 0 24px;padding:8px 0;border:0;background:transparent;color:#0b5f82;font:inherit;font-size:19px;text-decoration:underline;cursor:pointer}
+    .otros-volver:focus-visible{outline:3px solid #12aee5;outline-offset:3px}
+  </style>
   <script src="js/sesion.js"></script>
   <script>
     const sesion = window.RitaQSesion.obtener();
     if(!sesion || !["SUPERADMIN", "CONSULTOR"].includes(sesion.perfil)){
       window.location.replace("index.html");
+    } else {
+      const menu = document.getElementById("otrosMenu");
+      const autoproteccion = document.getElementById("otrosAutoproteccion");
+      const tituloMenu = menu.querySelector("h1");
+      const tituloAutoproteccion = autoproteccion.querySelector("h1");
+      document.querySelector('[data-servicio="1"]').addEventListener("click", () => {
+        menu.hidden = true;
+        autoproteccion.hidden = false;
+        tituloAutoproteccion.setAttribute("tabindex", "-1");
+        tituloAutoproteccion.focus();
+      });
+      document.getElementById("otrosVolver").addEventListener("click", () => {
+        autoproteccion.hidden = true;
+        menu.hidden = false;
+        tituloMenu.setAttribute("tabindex", "-1");
+        tituloMenu.focus();
+      });
     }
   </script>
 </body>
