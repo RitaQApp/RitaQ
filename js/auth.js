@@ -43,7 +43,16 @@
         logo: cliente.logo_azul || cliente.logo_blanco || ""
       });
     }
-    return [...empresas.sort((a,b) => a.nombre.localeCompare(b.nombre,"es")), ...especiales];
+    const ordenadas = empresas.sort((a,b) => a.nombre.localeCompare(b.nombre,"es"));
+    const lifeLearning = especiales.find(u => String(u.codigo || "").toUpperCase() === "ALS");
+    const otrosEspeciales = especiales.filter(u => u !== lifeLearning);
+    const primero = lifeLearning ? [{
+      ...lifeLearning,
+      nombre: "LifeLearning Consultoría",
+      logo: "assets/lifelearning_logo.png",
+      esConsultorPrincipal: true
+    }] : [];
+    return [...primero, ...ordenadas, ...otrosEspeciales];
   }
 
   function buscarUsuario(codigo){
@@ -93,6 +102,13 @@
       limpiarMensaje();
     }
     for(const dato of usuariosDisponibles()){
+      if(opciones.length === 1 && opciones[0].dataset.codigo === "ALS"){
+        const separador = document.createElement("div");
+        separador.className = "empresa-separador";
+        separador.setAttribute("role","separator");
+        separador.setAttribute("aria-hidden","true");
+        lista.append(separador);
+      }
       const opcion = document.createElement("button");
       opcion.type = "button";
       opcion.className = "empresa-opcion";

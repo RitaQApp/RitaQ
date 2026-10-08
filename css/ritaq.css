@@ -525,3 +525,6 @@ h1{
   .empresa-opcion{font-size:18px}
   .empresa-mini-logo{width:24px;height:24px;flex-basis:24px}
 }
+
+/* Separación entre el acceso de LifeLearning y las empresas cliente. */
+.empresa-separador{height:1px;margin:6px 12px;background:var(--line);pointer-events:none}
