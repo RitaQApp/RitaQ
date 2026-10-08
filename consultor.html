@@ -16,6 +16,11 @@
     .rq-otros-gordito:hover{background:#f4f9fb;border-color:#12aee5}
     .rq-otros-gordito:focus-visible,.rq-otros-volver:focus-visible{outline:3px solid #12aee5;outline-offset:3px}
     .rq-otros-num{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border:1px solid currentColor;border-radius:50%;font-size:22px}
+    .rq-plan-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    .rq-plan-grid .rq-otros-gordito{min-height:120px;padding:14px 11px;grid-template-columns:35px minmax(0,1fr);gap:9px;font-size:16px}
+    .rq-plan-grid .rq-otros-num{width:35px;height:35px;font-size:16px}
+    @media(max-width:1100px){.rq-plan-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:620px){.rq-plan-grid{grid-template-columns:1fr}}
     .rq-otros-volver{margin:0 0 22px;padding:9px 15px;border:1px solid #0b5f82;background:#fff;color:#0b5f82;font:inherit;cursor:pointer}
     @media(max-width:700px){.rq-otros-grid{grid-template-columns:1fr;gap:12px}.rq-otros-gordito{min-height:95px;padding:16px 12px;font-size:20px;grid-template-columns:38px minmax(0,1fr)}.rq-otros-num{width:36px;height:36px;font-size:19px}}
   </style>
@@ -207,9 +212,24 @@
     "HISTÓRICO DE PLANES"
   ];
 
-  function crearGorditos(nombres, alPulsar){
+  const capitulosPlan = [
+    "0. GENERALIDADES",
+    "1. IDENTIFICACIÓN DE TITULARES Y EMPLAZAMIENTO",
+    "2. DESCRIPCIÓN DE LA ACTIVIDAD Y DEL MEDIO FÍSICO",
+    "3. INVENTARIO, ANÁLISIS Y EVALUACIÓN DE RIESGOS",
+    "4. MEDIDAS Y MEDIOS DE AUTOPROTECCIÓN",
+    "5. PROGRAMA DE MANTENIMIENTO DE INSTALACIONES",
+    "6. PLAN DE ACTUACIÓN ANTE EMERGENCIAS",
+    "7. INTEGRACIÓN EN PLANES DE ÁMBITO SUPERIOR",
+    "8. IMPLANTACIÓN DEL PLAN DE AUTOPROTECCIÓN",
+    "9. MANTENIMIENTO DE LA EFICACIA Y ACTUALIZACIÓN",
+    "10. PROTOCOLO DE PRIMEROS AUXILIOS",
+    "ANEXOS"
+  ];
+
+  function crearGorditos(nombres, alPulsar, claseExtra = ""){
     const grid = document.createElement("div");
-    grid.className = "rq-otros-grid";
+    grid.className = "rq-otros-grid" + (claseExtra ? " " + claseExtra : "");
     nombres.forEach((nombre, indice) => {
       const boton = document.createElement("button");
       boton.type = "button";
@@ -217,7 +237,7 @@
       const numero = document.createElement("span");
       numero.className = "rq-otros-num";
       numero.setAttribute("aria-hidden", "true");
-      numero.textContent = String(indice + 1);
+      numero.textContent = claseExtra === "rq-plan-grid" ? (indice < 11 ? String(indice) : "A") : String(indice + 1);
       const texto = document.createElement("span");
       texto.textContent = nombre;
       boton.append(numero, texto);
@@ -242,7 +262,20 @@
     volver.className = "rq-otros-volver";
     volver.textContent = "← Volver a Otros";
     volver.addEventListener("click", () => mostrarOtros(contenido));
-    contenido.replaceChildren(volver, crearGorditos(accionesAutoproteccion, () => {}));
+    contenido.replaceChildren(volver, crearGorditos(accionesAutoproteccion, indice => {
+      if(indice === 0) mostrarAltaPlan(contenido);
+    }));
+  }
+
+  function mostrarAltaPlan(contenido){
+    titulo.textContent = "Alta / Edición de Plan Nuevo";
+    const volver = document.createElement("button");
+    volver.type = "button";
+    volver.className = "rq-otros-volver";
+    volver.textContent = "← Volver a Planes de Autoprotección";
+    volver.addEventListener("click", () => mostrarPlanesAutoproteccion(contenido));
+    contenido.className = "";
+    contenido.replaceChildren(volver, crearGorditos(capitulosPlan, () => {}, "rq-plan-grid"));
   }
 
   const salir = document.getElementById("btnSalir");
