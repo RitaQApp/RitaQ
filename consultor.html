@@ -288,6 +288,7 @@
     contenido.className = "";
     contenido.replaceChildren(volver, crearGorditos(capitulosPlan, indice => {
       if(indice === 0) mostrarGeneralidades(contenido);
+      if(indice === 1) mostrarIdentificacion(contenido);
     }, "rq-plan-grid"));
   }
 
@@ -348,6 +349,76 @@
     grupo("0.4", "NORMATIVA DE APLICACIÓN", "Las referencias comunes y territoriales deben contrastarse antes de incorporar el texto normativo definitivo.", [
       {id:"territorio", nombre:"Comunidad autónoma y municipio", tipo:"texto", ayuda:"Ubicación normativa de la instalación"},
       {id:"normas_especificas", nombre:"Normativa sectorial y disposiciones particulares aplicables", ayuda:"Añadir referencias específicas de la actividad o instalación, sin sustituir la normativa común."}
+    ]);
+    contenido.className = "";
+    contenido.replaceChildren(volver, formulario);
+  }
+
+  function mostrarIdentificacion(contenido){
+    titulo.textContent = "Plan de Autoprotección · 1. Identificación de titulares y emplazamiento";
+    const volver = document.createElement("button");
+    volver.type = "button";
+    volver.className = "rq-otros-volver";
+    volver.textContent = "← Volver a la estructura del Plan";
+    volver.addEventListener("click", () => mostrarAltaPlan(contenido));
+
+    const formulario = document.createElement("form");
+    formulario.className = "rq-pa-form";
+    formulario.setAttribute("aria-label", "Identificación de titulares y emplazamiento del Plan de Autoprotección");
+    formulario.addEventListener("submit", ev => ev.preventDefault());
+    const intro = document.createElement("p");
+    intro.className = "rq-pa-head";
+    intro.textContent = "Capítulo 1. Identificación de los titulares y emplazamiento de la actividad";
+    formulario.append(intro);
+
+    function grupo(numero, tituloGrupo, campos){
+      const bloque = document.createElement("fieldset");
+      const leyenda = document.createElement("legend");
+      leyenda.textContent = numero + ". " + tituloGrupo;
+      bloque.append(leyenda);
+      campos.forEach(campo => {
+        const etiqueta = document.createElement("label");
+        etiqueta.htmlFor = "rq-pa1-" + campo.id;
+        etiqueta.textContent = campo.nombre;
+        const control = document.createElement(campo.largo ? "textarea" : "input");
+        control.id = "rq-pa1-" + campo.id;
+        control.name = campo.id;
+        if(campo.largo) control.rows = 4;
+        else control.type = campo.telefono ? "tel" : campo.correo ? "email" : "text";
+        control.placeholder = campo.ayuda || "";
+        bloque.append(etiqueta, control);
+      });
+      formulario.append(bloque);
+    }
+    grupo("1.1", "IDENTIFICACIÓN DEL EMPLAZAMIENTO", [
+      {id:"nombre", nombre:"Denominación del establecimiento o instalación"},
+      {id:"direccion", nombre:"Dirección completa"},
+      {id:"localidad", nombre:"Municipio / Localidad"},
+      {id:"provincia", nombre:"Provincia"},
+      {id:"codigo_postal", nombre:"Código postal"},
+      {id:"referencias", nombre:"Referencias y datos de localización adicionales (si procede)", largo:true}
+    ]);
+    grupo("1.2", "IDENTIFICACIÓN DEL TITULAR Y LICENCIATARIO DE LA ACTIVIDAD", [
+      {id:"titular", nombre:"Razón social / Titular de la actividad"},
+      {id:"nif", nombre:"NIF / CIF"},
+      {id:"domicilio", nombre:"Domicilio social"},
+      {id:"representante", nombre:"Representante o persona de contacto"},
+      {id:"telefono_titular", nombre:"Teléfono de contacto", telefono:true},
+      {id:"correo_titular", nombre:"Correo electrónico", correo:true},
+      {id:"licenciatario", nombre:"Licenciatario o explotador de la actividad (si es distinto del titular)"}
+    ]);
+    grupo("1.3", "IDENTIFICACIÓN DEL DIRECTOR DEL PLAN DE AUTOPROTECCIÓN", [
+      {id:"director_plan", nombre:"Nombre y apellidos"},
+      {id:"cargo_director", nombre:"Cargo o función"},
+      {id:"telefono_director", nombre:"Teléfono de contacto", telefono:true},
+      {id:"correo_director", nombre:"Correo electrónico", correo:true}
+    ]);
+    grupo("1.4", "IDENTIFICACIÓN DEL DIRECTOR DEL PLAN DE ACTUACIÓN EN EMERGENCIAS", [
+      {id:"director_emergencias", nombre:"Nombre y apellidos"},
+      {id:"cargo_emergencias", nombre:"Cargo o función"},
+      {id:"telefono_emergencias", nombre:"Teléfono de contacto", telefono:true},
+      {id:"correo_emergencias", nombre:"Correo electrónico", correo:true},
+      {id:"suplente_emergencias", nombre:"Suplente (si procede)"}
     ]);
     contenido.className = "";
     contenido.replaceChildren(volver, formulario);
