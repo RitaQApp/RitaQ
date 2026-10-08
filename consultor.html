@@ -9,6 +9,17 @@
   <!-- RITAQ VISUAL V3: menú izquierda + cabecera azul + botones enmarcados -->
   <link rel="stylesheet" href="consultor_visual_v3.css?v=20261001-1800">
   <link rel="stylesheet" href="css/gestion_usuarios.css">
+<style>
+/* Opciones de Otros y Autoprotección dentro del panel del Consultor. */
+#contenidoModulo.otros-panel{width:100%;max-width:1100px}
+.otros-panel .otros-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.otros-panel .otros-gordito{display:grid;grid-template-columns:48px minmax(0,1fr);align-items:center;gap:16px;min-height:126px;padding:22px 20px;border:1px solid #0b5f82;background:#fff;color:#0b5f82;font:inherit;font-size:24px;text-align:left;cursor:pointer;overflow-wrap:anywhere}
+.otros-panel .otros-gordito:hover{background:#f4f9fb;border-color:#12aee5}
+.otros-panel .otros-gordito:focus-visible,.otros-panel .otros-volver:focus-visible{outline:3px solid #12aee5;outline-offset:3px}
+.otros-panel .otros-num{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border:1px solid currentColor;border-radius:50%;font-size:22px}
+.otros-panel .otros-volver{margin:0 0 24px;padding:8px 0;border:0;background:transparent;color:#0b5f82;font:inherit;font-size:19px;text-decoration:underline;cursor:pointer}
+@media(max-width:600px){.otros-panel .otros-grid{grid-template-columns:1fr;gap:12px}.otros-panel .otros-gordito{min-height:90px;padding:16px 12px;font-size:20px}.otros-panel .otros-num{width:36px;height:36px;font-size:19px}}
+</style>
 </head>
 <body>
 
@@ -160,14 +171,51 @@
     contador.hidden = n === 0;
   };
 
+  // El área Otros se muestra dentro del entorno, sin ocultar el menú lateral.
+  const serviciosOtros = [
+    "Planes de Autoprotección",
+    "Planes Puntuales de Seguridad y Evacuación",
+    "Simulacros de Evacuación",
+    "Cálculo de Huella de Carbono",
+    "Auditoría Salarial",
+    "Cálculo de Brecha Salarial"
+  ];
+  const opcionesAutoproteccion = [
+    "ALTA / EDICIÓN DE PLAN NUEVO",
+    "CONSULTA DE UN PLAN DE AUTOPROTECCIÓN",
+    "PLANES EN VIGOR",
+    "HISTÓRICO DE PLANES"
+  ];
+  const contenido = document.getElementById("contenidoModulo");
+  const botonesGorditos = (items, prefijo) =>
+    '<div class="otros-grid" aria-label="Opciones disponibles">' +
+    items.map((nombre, i) =>
+      '<button class="otros-gordito" type="button" data-otros="' + prefijo + (i + 1) + '">' +
+      '<span class="otros-num" aria-hidden="true">' + (i + 1) + '</span>' +
+      '<span>' + nombre + '</span></button>'
+    ).join('') + '</div>';
+
+  function abrirOtros(){
+    contenido.className = "otros-panel";
+    titulo.textContent = "Otros";
+    contenido.innerHTML = botonesGorditos(serviciosOtros, "servicio-");
+  }
+  function abrirAutoproteccion(){
+    titulo.textContent = "Planes de Autoprotección";
+    contenido.innerHTML = '<button type="button" class="otros-volver" data-otros="volver">← Volver a Otros</button>' +
+      botonesGorditos(opcionesAutoproteccion, "plan-");
+  }
+  contenido.addEventListener("click", function(ev){
+    const boton = ev.target.closest("button[data-otros]");
+    if(!boton || !contenido.contains(boton)) return;
+    if(boton.dataset.otros === "servicio-1") abrirAutoproteccion();
+    if(boton.dataset.otros === "volver") abrirOtros();
+    // Los demás gorditos quedan visibles, pendientes de definición.
+  });
+
   menu.addEventListener("click", function(ev){
     const btn = ev.target.closest(".menu-btn");
     if(!btn) return;
-    if(btn.dataset.num === "12"){
-      window.location.href = "otros.html";
-      return;
-    }
-
     menu.querySelectorAll(".menu-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
 
@@ -176,7 +224,9 @@
     titulo.textContent = btn.dataset.title || "";
 
     const contenido = document.getElementById("contenidoModulo");
-    if(btn.dataset.num === "0" && window.RitaQGestionUsuarios){
+    if(btn.dataset.num === "12"){
+      abrirOtros();
+    }else if(btn.dataset.num === "0" && window.RitaQGestionUsuarios){
       contenido.className = "";
       window.RitaQGestionUsuarios.mostrar(contenido);
     }else{
