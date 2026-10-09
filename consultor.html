@@ -592,7 +592,12 @@
       const pie = document.createElement("figcaption");
       pie.textContent = "Esquema de actuación ante emergencias. Reproducción del original, sin modificaciones.";
       figura.append(grafico,pie);
-      documento.append(figura);
+      // Colocar el esquema al comenzar el capítulo, justo antes del apartado 6.1.
+      const primerApartado = Array.from(documento.children).find(elemento =>
+        /^6\.1\./.test(elemento.textContent.trim())
+      );
+      if(primerApartado) documento.insertBefore(figura, primerApartado);
+      else documento.append(figura);
     }catch(error){
       if(!documento.isConnected) return;
       estado.className = "rq-pa6-error";
