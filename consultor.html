@@ -303,6 +303,9 @@
         case 1: mostrarIdentificacion(contenido); break;
         case 2: mostrarDescripcionActividad(contenido); break;
         case 6: mostrarPlanEmergencias(contenido); break;
+        case 7: mostrarCapituloFijo(contenido, 7); break;
+        case 8: mostrarCapituloFijo(contenido, 8); break;
+        case 10: mostrarCapituloFijo(contenido, 10); break;
       }
     }, "rq-plan-grid"));
   }
@@ -603,6 +606,67 @@
       estado.className = "rq-pa6-error";
       estado.textContent = "No se ha podido abrir capitulo_6_texto.md. Comprueba que los tres archivos del ZIP estén instalados juntos en el mismo directorio y que RitaQ© se abra desde el servidor web.";
       console.error("RitaQ© capítulo 6",error);
+    }
+  }
+
+
+  async function mostrarCapituloFijo(contenido, numero){
+    const descripciones = {
+      7: "Integración en planes de ámbito superior",
+      8: "Implantación del Plan de Autoprotección",
+      10: "Protocolo de primeros auxilios"
+    };
+    titulo.textContent = "Plan de Autoprotección · " + numero + ". " + descripciones[numero];
+    const volver = document.createElement("button");
+    volver.type = "button";
+    volver.className = "rq-otros-volver";
+    volver.textContent = "← Volver a la estructura del Plan";
+    volver.addEventListener("click", () => mostrarAltaPlan(contenido));
+    const articulo = document.createElement("article");
+    articulo.className = "rq-pa6-doc";
+    articulo.setAttribute("aria-label", "Texto fijo del capítulo " + numero);
+    const estado = document.createElement("p");
+    estado.textContent = "Cargando el capítulo " + numero + "…";
+    articulo.append(estado);
+    contenido.className = "";
+    contenido.replaceChildren(volver, articulo);
+    try {
+      const respuesta = await fetch("capitulo_" + numero + "_texto.md", {cache:"no-store"});
+      if (!respuesta.ok) throw new Error("HTTP " + respuesta.status);
+      const texto = await respuesta.text();
+      if (!articulo.isConnected) return;
+      articulo.replaceChildren();
+      for (const linea of texto.replace(/\r/g, "").split("\n")) {
+        const contenidoLinea = linea.trim();
+        if (!contenidoLinea) continue;
+        const figura = contenidoLinea.match(/^!\[([^\]]*)\]\((capitulo_10_figura_\d+\.png)\)$/);
+        if (figura) {
+          const contenedor = document.createElement("figure");
+          const imagen = document.createElement("img");
+          imagen.src = figura[2];
+          imagen.alt = figura[1];
+          imagen.style.cssText = "display:block;max-width:100%;height:auto;margin:auto";
+          contenedor.append(imagen);
+          articulo.append(contenedor);
+          continue;
+        }
+        const encabezado = contenidoLinea.match(/^(#{1,4})\s+(.*)$/);
+        const elemento = document.createElement(encabezado ? (encabezado[1].length===1 ? "h2" : encabezado[1].length===2 ? "h3" : "h4") : "p");
+        const cuerpo = encabezado ? encabezado[2] : contenidoLinea;
+        for (const parte of cuerpo.split(/(\*\*[^*]+\*\*)/g)) {
+          if (parte.startsWith("**") && parte.endsWith("**")) {
+            const negrita = document.createElement("strong");
+            negrita.textContent = parte.slice(2,-2);
+            elemento.append(negrita);
+          } else elemento.append(document.createTextNode(parte));
+        }
+        articulo.append(elemento);
+      }
+    } catch (error) {
+      if (!articulo.isConnected) return;
+      estado.className = "rq-pa6-error";
+      estado.textContent = "No se ha podido cargar el capítulo " + numero + ". Comprueba que el archivo capitulo_" + numero + "_texto.md esté instalado junto a consultor.html.";
+      console.error("RitaQ© capítulo fijo",numero,error);
     }
   }
 
