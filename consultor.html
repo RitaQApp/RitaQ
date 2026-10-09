@@ -287,9 +287,107 @@
     volver.addEventListener("click", () => mostrarPlanesAutoproteccion(contenido));
     contenido.className = "";
     contenido.replaceChildren(volver, crearGorditos(capitulosPlan, indice => {
-      if(indice === 0) mostrarGeneralidades(contenido);
-      if(indice === 1) mostrarIdentificacion(contenido);
+      switch (indice) {
+        case 0: mostrarGeneralidades(contenido); break;
+        case 1: mostrarIdentificacion(contenido); break;
+        case 2: mostrarDescripcionActividad(contenido); break;
+      }
     }, "rq-plan-grid"));
+  }
+
+  function mostrarDescripcionActividad(contenido){
+    titulo.textContent = "Plan de Autoprotección · 2. Descripción de la actividad y del medio físico";
+    const volver = document.createElement("button");
+    volver.type = "button";
+    volver.className = "rq-otros-volver";
+    volver.textContent = "← Volver a la estructura del Plan";
+    volver.addEventListener("click", () => mostrarAltaPlan(contenido));
+
+    const formulario = document.createElement("form");
+    formulario.className = "rq-pa-form";
+    formulario.setAttribute("aria-label", "Descripción de la actividad y del medio físico del Plan de Autoprotección");
+    formulario.addEventListener("submit", ev => ev.preventDefault());
+    const intro = document.createElement("p");
+    intro.className = "rq-pa-head";
+    intro.textContent = "Capítulo 2. Descripción detallada de la actividad y del medio físico en el que se desarrolla";
+    formulario.append(intro);
+
+    function grupo(numero, tituloGrupo, campos){
+      const bloque = document.createElement("fieldset");
+      const leyenda = document.createElement("legend");
+      leyenda.textContent = numero + ". " + tituloGrupo;
+      bloque.append(leyenda);
+      campos.forEach(campo => {
+        const etiqueta = document.createElement("label");
+        etiqueta.htmlFor = "rq-pa2-" + campo.id;
+        etiqueta.textContent = campo.nombre;
+        const control = document.createElement(campo.largo ? "textarea" : "input");
+        control.id = "rq-pa2-" + campo.id;
+        control.name = campo.id;
+        if(campo.largo) control.rows = campo.filas || 4;
+        else control.type = campo.tipo || "text";
+        control.placeholder = campo.ayuda || "";
+        bloque.append(etiqueta, control);
+      });
+      formulario.append(bloque);
+    }
+
+    grupo("2.1", "DESCRIPCIÓN DE LAS ACTIVIDADES DESARROLLADAS", [
+      {id:"actividades", nombre:"Actividades principales y complementarias", largo:true, ayuda:"Describir las actividades realizadas en el establecimiento."},
+      {id:"horarios", nombre:"Horarios, calendario y períodos de funcionamiento", largo:true},
+      {id:"zonas_actividad", nombre:"Áreas y espacios donde se desarrolla cada actividad", largo:true}
+    ]);
+    grupo("2.2", "DESCRIPCIÓN DEL ESTABLECIMIENTO, DEPENDENCIAS E INSTALACIONES", [
+      {id:"descripcion_centro", nombre:"Descripción general del establecimiento", largo:true},
+      {id:"edificios", nombre:"Edificios, plantas, dependencias y zonas exteriores", largo:true},
+      {id:"instalaciones", nombre:"Instalaciones y servicios existentes", largo:true, ayuda:"Electricidad, climatización, gas, cocina, agua y otros servicios que correspondan."},
+      {id:"superficies", nombre:"Superficies, dimensiones y distribución", largo:true}
+    ]);
+    grupo("2.3", "CLASIFICACIÓN Y DESCRIPCIÓN DE LOS USUARIOS", [
+      {id:"trabajadores", nombre:"Personal y trabajadores habituales"},
+      {id:"usuarios", nombre:"Usuarios y ocupantes habituales", largo:true},
+      {id:"visitantes", nombre:"Visitantes y ocupación ocasional", largo:true},
+      {id:"ocupacion_maxima", nombre:"Ocupación máxima prevista"},
+      {id:"necesidades_evacuacion", nombre:"Personas que puedan necesitar apoyo durante la evacuación", largo:true, ayuda:"Movilidad, visión, audición, edad u otras necesidades relevantes, sin incluir datos personales innecesarios."}
+    ]);
+    grupo("2.4", "DESCRIPCIÓN DEL ENTORNO URBANO, INDUSTRIAL O NATURAL", [
+      {id:"entorno", nombre:"Características del entorno y usos colindantes", largo:true},
+      {id:"riesgos_entorno", nombre:"Elementos y actividades próximos de interés para la autoprotección", largo:true}
+    ]);
+    grupo("2.5", "SITUACIÓN", [
+      {id:"situacion", nombre:"Situación geográfica y referencias de ubicación", largo:true},
+      {id:"coordenadas", nombre:"Coordenadas geográficas (si se conocen)"}
+    ]);
+    grupo("2.6", "EMPLAZAMIENTO Y ENTORNO INMEDIATO", [
+      {id:"emplazamiento", nombre:"Distribución del recinto, límites y elementos próximos", largo:true},
+      {id:"accesibilidad_exterior", nombre:"Condiciones del espacio exterior para la intervención", largo:true}
+    ]);
+    grupo("2.7", "ACCESOS", [
+      {id:"accesos_recinto", nombre:"Accesos al recinto y desde la vía pública", largo:true},
+      {id:"accesos_edificios", nombre:"Accesos a los edificios y dependencias", largo:true},
+      {id:"accesos_emergencia", nombre:"Acceso y maniobra de servicios de emergencia", largo:true}
+    ]);
+    grupo("2.8", "CARACTERÍSTICAS CONSTRUCTIVAS", [
+      {id:"construccion", nombre:"Tipología y características constructivas", largo:true},
+      {id:"plantas_alturas", nombre:"Número de plantas, alturas y distribución", largo:true},
+      {id:"elementos_constructivos", nombre:"Elementos constructivos relevantes para la seguridad", largo:true}
+    ]);
+    grupo("2.9", "SECTORES DE INCENDIO", [
+      {id:"sectores", nombre:"Sectorización y compartimentación existentes", largo:true},
+      {id:"puertas_cortafuego", nombre:"Puertas y elementos de separación relevantes", largo:true}
+    ]);
+    grupo("2.10", "VÍAS DE EVACUACIÓN", [
+      {id:"recorridos", nombre:"Recorridos y salidas de evacuación", largo:true},
+      {id:"escaleras_pasillos", nombre:"Pasillos, escaleras y otros elementos de circulación", largo:true},
+      {id:"evacuacion_asistida", nombre:"Condiciones y limitaciones para la evacuación asistida", largo:true}
+    ]);
+    grupo("2.11", "PUNTOS DE REUNIÓN Y ESPACIOS SEGUROS", [
+      {id:"puntos_reunion", nombre:"Puntos de reunión exteriores y alternativas", largo:true},
+      {id:"espacios_seguros", nombre:"Espacios seguros y condicionantes particulares", largo:true}
+    ]);
+
+    contenido.className = "";
+    contenido.replaceChildren(volver, formulario);
   }
 
   function mostrarGeneralidades(contenido){
