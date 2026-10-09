@@ -636,8 +636,28 @@
       const texto = await respuesta.text();
       if (!articulo.isConnected) return;
       articulo.replaceChildren();
+      let tabla = null;
       for (const linea of texto.replace(/\r/g, "").split("\n")) {
         const contenidoLinea = linea.trim();
+        if (numero === 8 && /^\|.*\|$/.test(contenidoLinea)) {
+          const celdas = contenidoLinea.slice(1, -1).split("|").map(celda => celda.trim());
+          if (celdas.every(celda => /^:?-{3,}:?$/.test(celda))) continue;
+          if (!tabla) {
+            tabla = document.createElement("table");
+            tabla.style.cssText = "width:100%;border-collapse:collapse;margin:16px 0 24px;font-size:inherit";
+            articulo.append(tabla);
+          }
+          const fila = document.createElement("tr");
+          celdas.forEach(celda => {
+            const campo = document.createElement(tabla.rows.length ? "td" : "th");
+            campo.textContent = celda;
+            campo.style.cssText = "border:1px solid #777;padding:10px;text-align:left;vertical-align:top";
+            fila.append(campo);
+          });
+          tabla.append(fila);
+          continue;
+        }
+        tabla = null;
         if (!contenidoLinea) continue;
         const figura = contenidoLinea.match(/^!\[([^\]]*)\]\((capitulo_10_figura_\d+\.png)\)$/);
         if (figura) {

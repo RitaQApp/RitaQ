@@ -139,3 +139,15 @@ Medios materiales: Son medios todos los elementos humanos y materiales, de cará
 Grupos de Acción frente a una emergencia:  Estos medios permiten afrontar con una mayor eficacia las operaciones consideradas en los Planes de Protección Civil previstos en cada caso.
 
 Recursos: Son recursos todos los elementos naturales y artificiales, de carácter esencialmente estático, cuya disponibilidad hace posible o mejora las labores desarrolladas por los Servicios de Protección Civil ante situaciones de emergencia.
+
+## 8.7. PROGRAMA DE IMPLANTACIÓN
+
+La relación de actividades previstas para la implantación del Plan de Autoprotección y de Emergencias se recoge en la siguiente tabla. La fecha de realización de cada actividad se establecerá para la instalación correspondiente.
+
+| ACTIVIDAD | FECHA DE REALIZACIÓN |
+| --- | --- |
+| Estudio y, si procede, aprobación del Plan de Emergencia | |
+| Nombramiento de los componentes de los equipos | |
+| Formación de los equipos de emergencia | |
+| Simulacro inicial y análisis | |
+| Implantación del programa de mantenimiento | |
