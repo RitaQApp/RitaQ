@@ -34,6 +34,17 @@
     .rq-pa-form .rq-pa-help{font-size:14px;color:#607784;line-height:1.5;margin:4px 0 12px}
     .rq-pa-form .rq-pa-head{font-size:17px;color:#526b79;margin:0 0 18px}
     @media(max-width:620px){.rq-pa-form fieldset{padding:12px}.rq-pa-form legend{font-size:17px}}
+
+    /* Capítulo 6: documento fijo, lectura e imagen original */
+    .rq-pa6-doc{max-width:1060px;width:100%;color:#233945;line-height:1.65;font-size:16px}
+    .rq-pa6-doc h2{font-size:23px;color:#0b5f82;margin:28px 0 12px}
+    .rq-pa6-doc h3{font-size:19px;color:#0b5f82;margin:22px 0 9px}
+    .rq-pa6-doc h4{font-size:17px;color:#0b5f82;margin:18px 0 7px}
+    .rq-pa6-doc p{margin:0 0 13px;white-space:pre-wrap}
+    .rq-pa6-doc figure{margin:25px 0 15px;padding:12px;border:1px solid #d3dee4;background:#fff}
+    .rq-pa6-doc figure img{display:block;max-width:100%;height:auto;margin:auto}
+    .rq-pa6-doc figcaption{font-size:14px;color:#526b79;text-align:center;margin-top:12px}
+    .rq-pa6-doc .rq-pa6-error{border:1px solid #a33;padding:18px;background:#fff5f5;color:#8b1e1e}
   </style>
 </head>
 <body>
@@ -291,6 +302,7 @@
         case 0: mostrarGeneralidades(contenido); break;
         case 1: mostrarIdentificacion(contenido); break;
         case 2: mostrarDescripcionActividad(contenido); break;
+        case 6: mostrarPlanEmergencias(contenido); break;
       }
     }, "rq-plan-grid"));
   }
@@ -520,6 +532,73 @@
     ]);
     contenido.className = "";
     contenido.replaceChildren(volver, formulario);
+  }
+
+  async function mostrarPlanEmergencias(contenido){
+    titulo.textContent = "Plan de Autoprotección · 6. Plan de actuación ante emergencias";
+    const volver = document.createElement("button");
+    volver.type = "button";
+    volver.className = "rq-otros-volver";
+    volver.textContent = "← Volver a la estructura del Plan";
+    volver.addEventListener("click", () => mostrarAltaPlan(contenido));
+
+    const documento = document.createElement("article");
+    documento.className = "rq-pa6-doc";
+    documento.setAttribute("aria-label", "Texto fijo del capítulo 6 del Plan de Autoprotección");
+    const estado = document.createElement("p");
+    estado.textContent = "Cargando el capítulo 6…";
+    documento.append(estado);
+    contenido.className = "";
+    contenido.replaceChildren(volver, documento);
+
+    try{
+      const respuesta = await fetch("capitulo_6_texto.md", {cache:"no-store"});
+      if(!respuesta.ok) throw new Error("HTTP " + respuesta.status);
+      const texto = await respuesta.text();
+      if(!documento.isConnected) return;
+      documento.replaceChildren();
+      // Interpretación mínima y segura del texto maestro, sin insertar HTML arbitrario.
+      for(const linea of texto.replace(/\r/g, "").split("\n")){
+        if(!linea.trim()) continue;
+        const encabezado = linea.match(/^(#{1,4})\s+(.*)$/);
+        let elemento;
+        if(encabezado){
+          elemento = document.createElement(encabezado[1].length === 1 ? "h2" : encabezado[1].length === 2 ? "h3" : "h4");
+          elemento.textContent = encabezado[2];
+        }else{
+          elemento = document.createElement("p");
+          // Las negritas marcadas en Markdown se muestran como texto simple.
+          const partes = linea.split(/(\*\*[^*]+\*\*)/g);
+          for(const parte of partes){
+            if(parte.startsWith("**") && parte.endsWith("**")){
+              const fuerte = document.createElement("strong");
+              fuerte.textContent = parte.slice(2,-2);
+              elemento.append(fuerte);
+            }else elemento.append(document.createTextNode(parte));
+          }
+        }
+        documento.append(elemento);
+      }
+      const figura = document.createElement("figure");
+      const grafico = document.createElement("img");
+      grafico.src = "capitulo_6_esquema_original.png";
+      grafico.alt = "Esquema original de actuación ante emergencias, reproducido sin modificaciones";
+      grafico.addEventListener("error", () => {
+        const error = document.createElement("p");
+        error.className = "rq-pa6-error";
+        error.textContent = "No se encuentra capitulo_6_esquema_original.png. Debe instalarse junto a consultor.html.";
+        grafico.replaceWith(error);
+      },{once:true});
+      const pie = document.createElement("figcaption");
+      pie.textContent = "Esquema de actuación ante emergencias. Reproducción del original, sin modificaciones.";
+      figura.append(grafico,pie);
+      documento.append(figura);
+    }catch(error){
+      if(!documento.isConnected) return;
+      estado.className = "rq-pa6-error";
+      estado.textContent = "No se ha podido abrir capitulo_6_texto.md. Comprueba que los tres archivos del ZIP estén instalados juntos en el mismo directorio y que RitaQ© se abra desde el servidor web.";
+      console.error("RitaQ© capítulo 6",error);
+    }
   }
 
   const salir = document.getElementById("btnSalir");
