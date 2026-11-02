@@ -32,6 +32,8 @@
     .rq-politicas-gordito:focus-visible{outline:3px solid var(--politica-color);outline-offset:3px}
     .rq-politicas-gordito .rq-politicas-num{display:grid;place-items:center;flex:none;width:46px;height:46px;border:2px solid currentColor;border-radius:50%;font-size:22px}
     .rq-politicas-gordito .rq-politicas-norma{display:block;margin-top:7px;font-size:16px;font-weight:400}
+    .rq-politicas-gordito.rq-politicas-alerta{position:relative}
+    .rq-politicas-globo{position:absolute;top:12px;right:12px;display:grid;place-items:center;min-width:34px;height:34px;padding:0 8px;border-radius:999px;background:#ff1e00;color:#fff;font-size:18px;font-weight:700;line-height:1;box-shadow:0 0 0 2px #fff}
     @media(max-width:850px){.rq-politicas-grid{grid-template-columns:1fr}.rq-politicas-gordito{min-height:106px}}
 
     /* Capítulo 0 · Generalidades. Sólo afecta al contenido del módulo. */
@@ -238,6 +240,16 @@
     {nombre:"Políticas / Compromisos de Seguridad de la Información", norma:"ISO 27001", color:"#8236a7"},
     {nombre:"Políticas / Compromisos de Seguridad Laboral", norma:"ISO 45001", color:"#b44b08"}
   ];
+  function contarPropuestasPendientes(){
+    try{
+      const lista = JSON.parse(localStorage.getItem('RITAQ_POLITICAS_PROPUESTAS_V1') || '[]');
+      if(!Array.isArray(lista)) return 0;
+      return lista.filter(item => String(item?.estado || '').toLowerCase() !== 'revisada').length;
+    }catch(_){
+      return 0;
+    }
+  }
+
   function mostrarPoliticas(contenido){
     titulo.textContent = "Políticas y Compromisos";
     contenido.className = "";
@@ -264,8 +276,21 @@
       });
       grid.append(boton);
     });
-    const propuestas = document.createElement('button');propuestas.type='button';propuestas.className='rq-politicas-gordito';propuestas.style.setProperty('--politica-color','#FF2800');propuestas.innerHTML='<span class="rq-politicas-num">99</span><span>Propuestas de cambio<small class="rq-politicas-norma">Solicitudes de los clientes</small></span>';
-    propuestas.addEventListener('click',()=>{titulo.textContent='99 · Propuestas de cambio';window.RitaQPoliticasConsultor.mostrarPropuestas(contenido,()=>mostrarPoliticas(contenido))});grid.append(propuestas);
+    const propuestasPendientes = contarPropuestasPendientes();
+    const propuestas = document.createElement('button');
+    propuestas.type='button';
+    propuestas.className='rq-politicas-gordito rq-politicas-alerta';
+    propuestas.style.setProperty('--politica-color','#FF2800');
+    propuestas.innerHTML='<span class="rq-politicas-num">99</span><span>Propuestas de cambio<small class="rq-politicas-norma">Solicitudes de los clientes</small></span>';
+    if(propuestasPendientes > 0){
+      const globo = document.createElement('span');
+      globo.className = 'rq-politicas-globo';
+      globo.textContent = String(propuestasPendientes);
+      globo.setAttribute('aria-label', propuestasPendientes + ' propuestas pendientes');
+      propuestas.append(globo);
+    }
+    propuestas.addEventListener('click',()=>{titulo.textContent='99 · Propuestas de cambio';window.RitaQPoliticasConsultor.mostrarPropuestas(contenido,()=>mostrarPoliticas(contenido))});
+    grid.append(propuestas);
     contenido.replaceChildren(grid);
   }
 
