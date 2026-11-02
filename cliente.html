@@ -7,7 +7,26 @@
 @font-face{font-family:Tecnico;src:url('assets/tecnico_bold.ttf') format('truetype');font-weight:700;font-style:normal}
 .rq-cliente-cabecera{display:flex;align-items:center;gap:18px;min-width:0}.rq-logo-cliente{max-width:155px;max-height:65px;object-fit:contain;display:none}.rq-cliente-cabecera .mode{overflow-wrap:anywhere}
 .menu-btn:disabled{opacity:.42;cursor:not-allowed;background:transparent}.menu-btn:disabled:hover{background:transparent}.menu-btn:disabled .num{opacity:.65}
-.rq-pc-visor-layout{margin:0;max-width:100%}.rq-pc-visor-layout .rq-pc-categoria:disabled{opacity:.35;cursor:not-allowed;background:#f6f7f8}.rq-pc-visor-layout .rq-pc-categoria:disabled:hover{background:#f6f7f8}
+.rq-pc-visor-layout{margin:0;max-width:100%}
+/* Categorías ISO: mismo código cromático que el consultor. */
+.rq-pc-visor-layout .rq-pc-categoria{
+ display:block;text-align:left;min-height:132px;width:100%;padding:20px 23px;
+ background:#fff;border:2px solid var(--norma-color,#0b5f82);
+ color:var(--norma-color,#0b5f82);font-family:Tecnico,Arial,sans-serif;
+ font-size:22px;line-height:1.24;font-weight:400;cursor:pointer;
+ transition:background-color .15s ease;
+}
+.rq-pc-visor-layout .rq-pc-categoria:not(:disabled):hover{background:color-mix(in srgb,var(--norma-color,#0b5f82) 9%,white)}
+.rq-pc-visor-layout .rq-pc-categoria:disabled,
+.rq-pc-visor-layout .rq-pc-categoria:disabled:hover{
+ opacity:.38;cursor:not-allowed;background:#fff;
+ border-color:var(--norma-color,#0b5f82);color:var(--norma-color,#0b5f82);
+}
+.rq-pc-visor-layout .rq-pc-visor-card{border:1px solid #b8d0dc;background:#fff;padding:18px;margin:14px 0}
+.rq-pc-visor-layout .rq-pc-send{border:1px solid #0b5f82;background:#0b5f82;color:#fff;padding:9px 15px;font-family:inherit;cursor:pointer}
+.rq-pc-visor-layout .rq-pc-sugerencia{display:block;width:100%;min-height:100px;box-sizing:border-box;margin:10px 0;border:1px solid #a8bdc9;padding:10px;font-family:inherit}
+.rq-pc-visor-layout .rq-pc-documento{white-space:pre-wrap;line-height:1.6}
+@media(max-width:700px){.rq-pc-visor-layout .rq-pc-categoria{min-height:100px;font-size:18px}}
 @media(max-width:850px){.rq-logo-cliente{max-width:95px}.rq-cliente-cabecera .mode{font-size:21px}}
 </style></head><body>
 <div class="app-shell">
