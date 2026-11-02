@@ -40,7 +40,7 @@ function mostrar(host,norma,volver){
   const h=el('div',{class:'rq-pc-head'});h.append(el('h2',{},doc?'Editar documento':'Nuevo documento'));raiz.append(h,el('div',{class:'rq-pc-color'}));
   const p=el('section',{class:'rq-pc-panel'}),grid=el('div',{class:'rq-pc-fields'});p.append(grid);raiz.append(p);
   const code=campo('Código documental',original.codigo,'text',true),tit=campo('Título',original.titulo,'text',true),rev=campo('Revisión',original.revision),text=campo('Texto íntegro de la política o compromiso',original.texto,'textarea');
-  const tipoBox=el('div');tipoBox.append(el('label',{},'Tipo'));const tipo=el('select');['Política','Compromiso'].forEach(s=>{const o=el('option',{value:s},s);o.selected=s===original.tipo;tipo.append(o)});tipoBox.append(tipo);
+  const tipoBox=el('div');tipoBox.append(el('label',{},'Tipo'));const tipo=el('select');['Política','Compromiso','Ambos'].forEach(s=>{const o=el('option',{value:s},s);o.selected=s===original.tipo;tipo.append(o)});tipoBox.append(tipo);
   const estBox=el('div');estBox.append(el('label',{},'Estado'));const estado=el('select');['Borrador','En revisión','Aprobado','Obsoleto'].forEach(s=>{const o=el('option',{value:s},s);o.selected=s===original.estado;estado.append(o)});estBox.append(estado);
   grid.append(code.box,tit.box,tipoBox,rev.box,estBox);text.box.classList.add('full');grid.append(text.box);
   const block=el('section',{class:'rq-pc-panel'});block.append(el('h3',{},'Asignación a clientes'),el('p',{class:'rq-pc-help'},'Un mismo documento puede estar asignado a cualquier número de clientes. Filtra por nombre o código y marca los destinatarios. Las asignaciones de clientes que no estén visibles se conservan.'));
