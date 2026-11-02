@@ -9,6 +9,7 @@
   <!-- RITAQ VISUAL V3: menú izquierda + cabecera azul + botones enmarcados -->
   <link rel="stylesheet" href="consultor_visual_v3.css?v=20261001-1800">
   <link rel="stylesheet" href="css/gestion_usuarios.css">
+  <link rel="stylesheet" href="css/politicas_compromisos.css">
   <style>
     /* Menú Otros integrado en el área central, sin alterar la barra lateral */
     .rq-otros-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
@@ -23,6 +24,15 @@
     @media(max-width:620px){.rq-plan-grid{grid-template-columns:1fr}}
     .rq-otros-volver{margin:0 0 22px;padding:9px 15px;border:1px solid #0b5f82;background:#fff;color:#0b5f82;font:inherit;cursor:pointer}
     @media(max-width:700px){.rq-otros-grid{grid-template-columns:1fr;gap:12px}.rq-otros-gordito{min-height:95px;padding:16px 12px;font-size:20px;grid-template-columns:38px minmax(0,1fr)}.rq-otros-num{width:36px;height:36px;font-size:19px}}
+
+    /* Botón 2 · Políticas y Compromisos. Colores exclusivos de cada norma. */
+    .rq-politicas-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;width:100%}
+    .rq-politicas-gordito{display:flex;align-items:center;gap:17px;min-height:132px;padding:22px;border:2px solid var(--politica-color);background:color-mix(in srgb,var(--politica-color) 12%,white);color:var(--politica-color);font:inherit;font-size:21px;font-weight:700;text-align:left;cursor:pointer}
+    .rq-politicas-gordito:hover{background:color-mix(in srgb,var(--politica-color) 22%,white)}
+    .rq-politicas-gordito:focus-visible{outline:3px solid var(--politica-color);outline-offset:3px}
+    .rq-politicas-gordito .rq-politicas-num{display:grid;place-items:center;flex:none;width:46px;height:46px;border:2px solid currentColor;border-radius:50%;font-size:22px}
+    .rq-politicas-gordito .rq-politicas-norma{display:block;margin-top:7px;font-size:16px;font-weight:400}
+    @media(max-width:850px){.rq-politicas-grid{grid-template-columns:1fr}.rq-politicas-gordito{min-height:106px}}
 
     /* Capítulo 0 · Generalidades. Sólo afecta al contenido del módulo. */
     .rq-pa-form{max-width:1050px;width:100%;color:#083f5b}
@@ -181,6 +191,7 @@
 <script src="js/sesion.js"></script>
 <script src="data/maestro_clientes.js"></script>
 <script src="js/gestion_usuarios.js"></script>
+<script src="js/politicas_compromisos.js"></script>
 <script>
 (function(){
   const menu = document.getElementById("menuConsultor");
@@ -208,7 +219,9 @@
     titulo.textContent = btn.dataset.title || "";
 
     const contenido = document.getElementById("contenidoModulo");
-    if(btn.dataset.num === "12"){
+    if(btn.dataset.num === "2"){
+      mostrarPoliticas(contenido);
+    }else if(btn.dataset.num === "12"){
       mostrarOtros(contenido);
     }else if(btn.dataset.num === "0" && window.RitaQGestionUsuarios){
       contenido.className = "";
@@ -218,6 +231,41 @@
       contenido.innerHTML = "<p>Contenido pendiente de definir.</p>";
     }
   });
+
+  const categoriasPoliticas = [
+    {nombre:"Políticas / Compromisos de Calidad", norma:"ISO 9001", color:"#0868b1"},
+    {nombre:"Políticas / Compromisos Medioambientales", norma:"ISO 14001", color:"#32bd00"},
+    {nombre:"Políticas / Compromisos de Seguridad de la Información", norma:"ISO 27001", color:"#8236a7"},
+    {nombre:"Políticas / Compromisos de Seguridad Laboral", norma:"ISO 45001", color:"#b44b08"}
+  ];
+  function mostrarPoliticas(contenido){
+    titulo.textContent = "Políticas y Compromisos";
+    contenido.className = "";
+    const grid = document.createElement("div");
+    grid.className = "rq-politicas-grid";
+    categoriasPoliticas.forEach((item, i) => {
+      const boton = document.createElement("button");
+      boton.type = "button";
+      boton.className = "rq-politicas-gordito";
+      boton.style.setProperty("--politica-color",item.color);
+      const num = document.createElement("span");
+      num.className = "rq-politicas-num";
+      num.textContent = String(i + 1);
+      const nombre = document.createElement("span");
+      nombre.textContent = item.nombre;
+      const norma = document.createElement("small");
+      norma.className = "rq-politicas-norma";
+      norma.textContent = item.norma;
+      nombre.append(norma);
+      boton.append(num,nombre);
+      boton.addEventListener("click", () => {
+        titulo.textContent = item.nombre + " (" + item.norma + ")";
+        window.RitaQPoliticasConsultor.mostrar(contenido,item.norma,() => mostrarPoliticas(contenido));
+      });
+      grid.append(boton);
+    });
+    contenido.replaceChildren(grid);
+  }
 
   const serviciosOtros = [
     "Planes de Autoprotección",

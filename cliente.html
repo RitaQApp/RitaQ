@@ -10,13 +10,32 @@
   <main class="acceso-shell">
     <section class="tarjeta-login" style="margin-top:70px;padding:40px">
       <h1>Empresa Cliente</h1>
-      <p style="font-size:24px;line-height:1.45">Entorno reservado para la siguiente fase de desarrollo.</p>
+      <p style="font-size:24px;line-height:1.45">Políticas y Compromisos</p>
+      <div id="rq-politicas-cliente" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px"></div>
+      <p id="rq-politicas-cliente-estado" style="margin-top:22px"></p>
     </section>
   </main>
   <script src="js/sesion.js"></script>
   <script>
     const s=RitaQSesion.obtener();
     if(!s || s.perfil!=="EMPRESA") location.replace("index.html");
+    const categorias = [
+      ["Políticas / Compromisos de Calidad", "ISO 9001", "#0868b1"],
+      ["Políticas / Compromisos Medioambientales", "ISO 14001", "#32bd00"],
+      ["Políticas / Compromisos de Seguridad de la Información", "ISO 27001", "#8236a7"],
+      ["Políticas / Compromisos de Seguridad Laboral", "ISO 45001", "#b44b08"]
+    ];
+    const panel = document.getElementById("rq-politicas-cliente");
+    categorias.forEach(([nombre, norma, color], i) => {
+      const boton = document.createElement("button");
+      boton.type = "button";
+      boton.style.cssText = "padding:22px 16px;min-height:115px;background:white;border:2px solid "+color+";color:"+color+";font:inherit;font-size:19px;font-weight:700;text-align:left;cursor:pointer";
+      boton.textContent = (i+1)+". "+nombre+" ("+norma+")";
+      boton.addEventListener("click",()=>{
+        document.getElementById("rq-politicas-cliente-estado").textContent = nombre + " (" + norma + "): contenido pendiente de definir.";
+      });
+      panel.append(boton);
+    });
   </script>
 </body>
 </html>

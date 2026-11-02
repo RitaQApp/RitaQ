@@ -1,0 +1,34 @@
+/* RITAQ© · Botón 2 · Entorno consultor. Estética RITAQ© */
+@font-face{font-family:RQTecnico;src:url('../assets/tecnico_regular.ttf') format('truetype');font-style:normal;font-weight:400}
+@font-face{font-family:RQTecnico;src:url('../assets/tecnico_bold.ttf') format('truetype');font-style:normal;font-weight:700}
+.rq-pc{font-family:RQTecnico,Arial,sans-serif;color:#153e52;width:100%;max-width:1200px}
+.rq-pc *{box-sizing:border-box}
+.rq-pc button,.rq-pc input,.rq-pc textarea,.rq-pc select{font:inherit}
+.rq-pc button{cursor:pointer}
+.rq-pc .rq-pc-back,.rq-pc .rq-pc-action{border:1px solid #0b5f82;color:#0b5f82;background:#fff;padding:10px 17px;font-weight:700}
+.rq-pc .rq-pc-action.primary{background:#0b5f82;color:#fff}
+.rq-pc .rq-pc-action.danger{border-color:#a43c36;color:#a43c36}
+.rq-pc .rq-pc-back:hover,.rq-pc .rq-pc-action:hover{background:#e8f6fc;color:#074561}
+.rq-pc-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin:18px 0}
+.rq-pc-head h2{font-size:25px;margin:0;color:#0b5f82}
+.rq-pc-panel{background:#fff;border:1px solid #ccdde6;padding:21px;margin:16px 0;box-shadow:0 1px 4px #001c300d}
+.rq-pc-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:15px 0}
+.rq-pc input,.rq-pc textarea,.rq-pc select{width:100%;padding:10px 12px;background:#fff;color:#132e3b;border:1px solid #a8bdc9;min-width:0}
+.rq-pc textarea{resize:vertical;min-height:190px;line-height:1.55}
+.rq-pc label{display:block;font-weight:700;margin-bottom:6px}
+.rq-pc-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.rq-pc-fields .full{grid-column:1/-1}
+.rq-pc-help{font-size:14px;color:#526d7b;line-height:1.5}
+.rq-pc-status{padding:10px 12px;border:1px solid #b7cfda;background:#f3f9fb;margin:12px 0}
+.rq-pc-list{width:100%;border-collapse:collapse}
+.rq-pc-list th,.rq-pc-list td{padding:12px 9px;text-align:left;border-bottom:1px solid #d6e1e7;vertical-align:middle}
+.rq-pc-list th{color:#0b5f82;background:#edf5f9}
+.rq-pc-list button{border:1px solid #0b5f82;background:white;color:#0b5f82;padding:7px 12px}
+.rq-pc-client-list{max-height:320px;overflow:auto;border:1px solid #c9d9e2;margin-top:9px}
+.rq-pc-client{display:flex;align-items:center;gap:12px;padding:9px 12px;border-bottom:1px solid #ecf1f4;cursor:pointer}
+.rq-pc-client input{width:19px;height:19px;flex:none}
+.rq-pc-client small{color:#637c88}
+.rq-pc-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.rq-pc-color{height:5px;background:var(--rq-pc-color);margin-top:10px}
+.rq-pc-empty{padding:25px;text-align:center;background:#f6f9fb;border:1px dashed #bfd1db}
+@media(max-width:750px){.rq-pc-fields{grid-template-columns:1fr}.rq-pc-fields .full{grid-column:auto}.rq-pc-list{font-size:14px}}
