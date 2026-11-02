@@ -7,9 +7,24 @@ const REVS='RITAQ_POLITICAS_REVISIONES_CLIENTE_V1';
 const PROP='RITAQ_POLITICAS_PROPUESTAS_V1';
 const ASSIGN='RITAQ_POLITICAS_ASIGNACIONES_V2';
 const MASTER='RITAQ_POLITICAS_MAESTRO_NUMEROS_V2';
+const VERSIONES='RITAQ_POLITICAS_VERSIONES_CLIENTE_V2';
 function obtenerJson(k,def){try{return JSON.parse(localStorage.getItem(k)||'null')||def}catch(_){return def}}
 function revisiones(){return obtenerJson(REVS,{})}
 function propuestas(){return obtenerJson(PROP,[])}
+function versionesCliente(){return obtenerJson(VERSIONES,{})}
+function historialCliente(doc,clienteId){const m=versionesCliente();return m[String(doc.numeroMaestro)]?.[String(clienteId)]||[]}
+function guardarVersion(doc,clienteId,rev,contenido){
+ const m=versionesCliente(),n=String(doc.numeroMaestro),c=String(clienteId);
+ m[n] ||= {};m[n][c] ||= [];
+ const actual=m[n][c];
+ const ya=actual.find(v=>String(v.revision)===String(rev));
+ if(ya){if(ya.texto!==contenido)throw new Error('La revisión '+rev+' ya existe con otro contenido. Utiliza un número de revisión nuevo para conservar el historial.');return false}
+ actual.push({revision:String(rev),texto:contenido,fecha:new Date().toISOString()});
+ localStorage.setItem(VERSIONES,JSON.stringify(m));
+ const antiguas=revisiones();antiguas[doc.id] ||= {};antiguas[doc.id][c]=String(rev);localStorage.setItem(REVS,JSON.stringify(antiguas));
+ return true;
+}
+
 const normas={
  'ISO 9001':{color:'#0868b1',label:'Calidad'},
  'ISO 14001':{color:'#32bd00',label:'Medioambiente'},
@@ -73,8 +88,27 @@ function mostrar(host,norma,volver){
   const contador=el('p',{class:'rq-pc-help'});block.append(contador);const busca=campo('Buscar cliente','','search');block.append(busca.box);
   const listaClientes=el('div',{class:'rq-pc-client-list'});block.append(listaClientes);raiz.append(block);
   const todos=clientes();const LIMITE=100;
-  const revBox=el('section',{class:'rq-pc-panel'});revBox.append(el('h3',{},'Revisiones particulares por cliente'),el('p',{class:'rq-pc-help'},'La revisión propia de cada cliente es independiente de la revisión del maestro. Guarda antes el documento nuevo; configura después las revisiones de los clientes asignados.'));const revBusqueda=campo('Buscar cliente para configurar su revisión','','search');revBox.append(revBusqueda.box);const revLista=el('div',{class:'rq-pc-client-list'});revBox.append(revLista);raiz.append(revBox);
-  function pintarRevisiones(){revLista.replaceChildren();const q=revBusqueda.input.value.trim().toLowerCase(), visibles=todos.filter(c=>(c.nombre+' '+c.codigo+' '+c.id).toLowerCase().includes(q)).slice(0,50);const mapa=revisiones();for(const c of visibles.filter(c=>seleccion.has(c.id))){const fila=el('div',{class:'rq-pc-rev-row'});fila.append(el('span',{},c.nombre+' ('+(c.codigo||c.id)+')'));const inp=el('input',{type:'text','aria-label':'Revisión para '+c.nombre,placeholder:'Revisión específica'});inp.value=String(mapa[original.id]?.[c.id]??'');const save=boton('GUARDAR REVISIÓN',()=>{if(!leer().some(d=>d.id===original.id)){aviso('Guarda primero el documento y sus asignaciones.');return}const m=revisiones();m[original.id] ||= {};if(inp.value.trim())m[original.id][c.id]=inp.value.trim();else delete m[original.id][c.id];localStorage.setItem(REVS,JSON.stringify(m));aviso('Revisión de '+c.nombre+' guardada.');});fila.append(inp,save);revLista.append(fila)}}revBusqueda.input.addEventListener('input',pintarRevisiones);pintarRevisiones();
+  const revBox=el('section',{class:'rq-pc-panel'});revBox.append(el('h3',{},'Revisiones particulares por cliente'),el('p',{class:'rq-pc-help'},'Cada cliente tiene su propia revisión y texto. Las revisiones anteriores se conservan: para cambiar el texto utiliza un número nuevo. Guarda antes el maestro y la asignación del cliente.'));const revBusqueda=campo('Buscar cliente para configurar su revisión','','search');revBox.append(revBusqueda.box);const revLista=el('div',{class:'rq-pc-client-list'});revBox.append(revLista);raiz.append(revBox);
+  function pintarRevisiones(){revLista.replaceChildren();const q=revBusqueda.input.value.trim().toLowerCase(), visibles=todos.filter(c=>(c.nombre+' '+c.codigo+' '+c.id).toLowerCase().includes(q)).slice(0,50);const mapa=revisiones();for(const c of visibles.filter(c=>seleccion.has(c.id))){const fila=el('div',{class:'rq-pc-rev-row'});fila.append(el('span',{},c.nombre+' ('+(c.codigo||c.id)+')'));const historico=historialCliente(original,c.id);
+ const actualRev=String(mapa[original.id]?.[c.id]??(historico.length?historico[historico.length-1].revision:original.revision??'0'));
+ const inp=el('input',{type:'text','aria-label':'Revisión para '+c.nombre,placeholder:'Revisión específica'});inp.value=actualRev;
+ const area=el('textarea',{'aria-label':'Texto propio de '+c.nombre});area.rows=5;
+ const actual=historico.find(v=>String(v.revision)===actualRev);
+ area.value=actual?actual.texto:original.texto||'';
+ const label=el('label',{},'Texto de la revisión del cliente');
+ const anteriores=el('select',{'aria-label':'Historial de versiones de '+c.nombre});
+ anteriores.append(el('option',{value:''},'Ver una revisión anterior…'));
+ for(const v of [...historico].reverse())anteriores.append(el('option',{value:String(v.revision)},'Revisión '+v.revision+' · '+new Date(v.fecha).toLocaleDateString('es-ES')));
+ anteriores.addEventListener('change',()=>{const v=historico.find(x=>String(x.revision)===anteriores.value);if(v){inp.value=v.revision;area.value=v.texto}});
+ const save=boton('GUARDAR VERSIÓN DEL CLIENTE',()=>{
+  const persisted=leer().find(d=>d.id===original.id);
+  if(!persisted){aviso('Guarda primero el documento y las asignaciones.');return}
+  if(!(asignaciones()[persisted.numeroMaestro]||[]).includes(c.id)){aviso('El cliente debe estar asignado y guardado antes de crear su versión.');return}
+  const revision=inp.value.trim();if(!revision){aviso('Introduce un número de revisión.');return}
+  try{const creada=guardarVersion(persisted,c.id,revision,area.value);aviso(creada?'Versión registrada y conservada en el historial.':'Esta revisión ya estaba guardada sin cambios.');pintarRevisiones()}
+  catch(err){alert(err.message)}
+ });
+ fila.append(inp,label,area,anteriores,save);revLista.append(fila)}}revBusqueda.input.addEventListener('input',pintarRevisiones);pintarRevisiones();
   function pintar(){listaClientes.replaceChildren();const q=busca.input.value.trim().toLocaleLowerCase();const filtrados=todos.filter(c=>(c.nombre+' '+c.codigo+' '+c.id).toLocaleLowerCase().includes(q));contador.textContent=seleccion.size+' cliente(s) asignado(s) · '+filtrados.length+' encontrado(s). Se muestran como máximo '+LIMITE+' resultados.';
    if(!filtrados.length)listaClientes.append(el('div',{class:'rq-pc-empty'},'No se han encontrado clientes.'));
    for(const c of filtrados.slice(0,LIMITE)){const fila=el('label',{class:'rq-pc-client'}),check=el('input',{type:'checkbox',value:c.id});check.checked=seleccion.has(c.id);check.addEventListener('change',()=>{if(check.checked)seleccion.add(c.id);else seleccion.delete(c.id);pintarRevisiones();contador.textContent=seleccion.size+' cliente(s) asignado(s) · '+filtrados.length+' encontrado(s). Se muestran como máximo '+LIMITE+' resultados.'});fila.append(check,el('span',{},c.nombre+' · '+(c.codigo||c.id)));listaClientes.append(fila)}
