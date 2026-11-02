@@ -264,6 +264,8 @@
       });
       grid.append(boton);
     });
+    const propuestas = document.createElement('button');propuestas.type='button';propuestas.className='rq-politicas-gordito';propuestas.style.setProperty('--politica-color','#FF2800');propuestas.innerHTML='<span class="rq-politicas-num">99</span><span>Propuestas de cambio<small class="rq-politicas-norma">Solicitudes de los clientes</small></span>';
+    propuestas.addEventListener('click',()=>{titulo.textContent='99 · Propuestas de cambio';window.RitaQPoliticasConsultor.mostrarPropuestas(contenido,()=>mostrarPoliticas(contenido))});grid.append(propuestas);
     contenido.replaceChildren(grid);
   }
 
