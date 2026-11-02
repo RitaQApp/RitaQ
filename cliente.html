@@ -1,41 +1,102 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>RitaQ© | Empresa Cliente</title>
-  <link rel="stylesheet" href="css/ritaq.css">
-</head>
-<body>
-  <main class="acceso-shell">
-    <section class="tarjeta-login" style="margin-top:70px;padding:40px">
-      <h1>Empresa Cliente</h1>
-      <p style="font-size:24px;line-height:1.45">Políticas y Compromisos</p>
-      <div id="rq-politicas-cliente" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px"></div>
-      <p id="rq-politicas-cliente-estado" style="margin-top:22px"></p>
-    </section>
-  </main>
-  <script src="js/sesion.js"></script>
-  <script>
-    const s=RitaQSesion.obtener();
-    if(!s || s.perfil!=="EMPRESA") location.replace("index.html");
-    const categorias = [
-      ["Políticas / Compromisos de Calidad", "ISO 9001", "#0868b1"],
-      ["Políticas / Compromisos Medioambientales", "ISO 14001", "#32bd00"],
-      ["Políticas / Compromisos de Seguridad de la Información", "ISO 27001", "#8236a7"],
-      ["Políticas / Compromisos de Seguridad Laboral", "ISO 45001", "#b44b08"]
-    ];
-    const panel = document.getElementById("rq-politicas-cliente");
-    categorias.forEach(([nombre, norma, color], i) => {
-      const boton = document.createElement("button");
-      boton.type = "button";
-      boton.style.cssText = "padding:22px 16px;min-height:115px;background:white;border:2px solid "+color+";color:"+color+";font:inherit;font-size:19px;font-weight:700;text-align:left;cursor:pointer";
-      boton.textContent = (i+1)+". "+nombre+" ("+norma+")";
-      boton.addEventListener("click",()=>{
-        document.getElementById("rq-politicas-cliente-estado").textContent = nombre + " (" + norma + "): contenido pendiente de definir.";
-      });
-      panel.append(boton);
-    });
-  </script>
-</body>
-</html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="color-scheme" content="light"><meta name="theme-color" content="#0b5f82"><title>RitaQ© | Entorno Usuario</title>
+<link rel="stylesheet" href="consultor_visual_v3.css?v=20261001-1800"><link rel="stylesheet" href="css/politicas_compromisos.css">
+<style>
+/* Ajustes exclusivos del visor; ningún cambio en el consultor */
+@font-face{font-family:Tecnico;src:url('assets/tecnico_regular.ttf') format('truetype');font-weight:400;font-style:normal}
+@font-face{font-family:Tecnico;src:url('assets/tecnico_bold.ttf') format('truetype');font-weight:700;font-style:normal}
+.rq-cliente-cabecera{display:flex;align-items:center;gap:18px;min-width:0}.rq-logo-cliente{max-width:155px;max-height:65px;object-fit:contain;display:none}.rq-cliente-cabecera .mode{overflow-wrap:anywhere}
+.menu-btn:disabled{opacity:.42;cursor:not-allowed;background:transparent}.menu-btn:disabled:hover{background:transparent}.menu-btn:disabled .num{opacity:.65}
+.rq-pc-visor-layout{margin:0;max-width:100%}.rq-pc-visor-layout .rq-pc-categoria:disabled{opacity:.35;cursor:not-allowed;background:#f6f7f8}.rq-pc-visor-layout .rq-pc-categoria:disabled:hover{background:#f6f7f8}
+@media(max-width:850px){.rq-logo-cliente{max-width:95px}.rq-cliente-cabecera .mode{font-size:21px}}
+</style></head><body>
+<div class="app-shell">
+<header class="topbar"><div class="brand"><img src="assets/RitaQ_transparente.png" alt="RitaQ©" class="brand-logo"><div class="brand-copy"><div class="rq-cliente-cabecera"><div><div class="mode" id="rqNombreCliente">CLIENTE</div><div class="subtitle">Sistema de Aseguramiento y Gestión de la Calidad</div></div><img id="rqLogoCliente" class="rq-logo-cliente" alt="Logotipo del cliente"></div></div></div>
+<div class="session"><div class="session-user"><span class="session-label">USUARIO</span><strong id="usuarioActivo"></strong></div><button id="btnSalir" class="logout" type="button">SALIR</button></div></header>
+<div class="workspace"><main class="work-area"><section class="welcome" id="panelInicio"><div class="section-kicker">RitaQ©</div><h1 id="tituloInicio">Empresa Cliente</h1><div class="cyan-rule"></div><p class="lead">Selecciona un área de trabajo en la banda lateral.</p><div class="empty-state"><div class="empty-title">Área de trabajo</div><p>Los botones sin información disponible aparecen desactivados.</p></div></section>
+<section class="module-view" id="panelModulo" hidden><div class="section-kicker" id="kickerModulo">RitaQ© · VISOR CLIENTE</div><h1 id="tituloModulo">Políticas y Compromisos</h1><div class="cyan-rule"></div><div id="contenidoModulo"></div><p id="rq-politicas-cliente-estado" role="status"></p></section></main>
+<aside class="side-menu" aria-label="Áreas del entorno cliente"><div class="side-head"><span>ÁREAS DE TRABAJO</span></div><nav class="menu-scroll" id="menuCliente">
+<button aria-disabled="true" class="menu-btn admin" data-num="0" data-title="Gestión de Usuarios" disabled="" type="button">
+<span class="num">0</span><span class="label">Gestión de Usuarios</span>
+</button>
+<div class="menu-separator"></div>
+<button aria-disabled="true" class="menu-btn" data-num="1" data-title="Información Documentada y Sistema" disabled="" type="button">
+<span class="num">1</span><span class="label">Información Documentada y Sistema</span>
+</button>
+<button aria-disabled="true" class="menu-btn" data-num="2" data-title="Políticas y Compromisos" disabled="" type="button">
+<span class="num">2</span><span class="label">Políticas y Compromisos</span>
+</button>
+<button aria-disabled="true" class="menu-btn" data-num="3" data-title="Análisis de Riesgos y Oportunidades" disabled="" type="button">
+<span class="num">3</span><span class="label">Análisis de Riesgos y Oportunidades</span>
+</button>
+<button aria-disabled="true" class="menu-btn" data-num="4" data-title="Grupos de Interés" disabled="" type="button">
+<span class="num">4</span><span class="label">Grupos de Interés</span>
+</button>
+<button aria-disabled="true" class="menu-btn" data-num="5" data-title="Legislación y Normativa" disabled="" type="button">
+<span class="num">5</span><span class="label">Legislación y Normativa</span>
+</button>
+<button aria-disabled="true" class="menu-btn" data-num="6" data-title="Indicadores y Objetivos (CMI)" disabled="" type="button">
+<span class="num">6</span><span class="label">Indicadores y Objetivos (CMI)</span>
+</button>
+<button aria-disabled="true" class="menu-btn" data-num="7" data-title="Recursos Humanos" disabled="" type="button">
+<span class="num">7</span><span class="label">Recursos Humanos</span>
+</button>
+<button aria-disabled="true" class="menu-btn" data-num="8" data-title="Infraestructura y Mantenimiento" disabled="" type="button">
+<span class="num">8</span><span class="label">Infraestructura y Mantenimiento</span>
+</button>
+<button aria-disabled="true" class="menu-btn" data-num="9" data-title="Producción, Equipos y Servicios" disabled="" type="button">
+<span class="num">9</span><span class="label">Producción, Equipos y Servicios</span>
+</button>
+<button aria-disabled="true" class="menu-btn" data-num="10" data-title="Mejora y Calidad" disabled="" type="button">
+<span class="num">10</span><span class="label">Mejora y Calidad</span>
+</button>
+<button aria-disabled="true" class="menu-btn" data-num="11" data-title="Impacto Ambiental" disabled="" type="button">
+<span class="num">11</span><span class="label">Impacto Ambiental</span>
+</button>
+<button aria-disabled="true" class="menu-btn" data-num="12" data-title="Otros" disabled="" type="button">
+<span class="num">12</span><span class="label">Otros</span>
+</button>
+<div class="menu-separator"></div>
+<button aria-disabled="true" class="menu-btn notices" data-num="13" data-title="Avisos y Comunicaciones" disabled="" type="button">
+<span class="num">13</span>
+<span class="label">Avisos y Comunicaciones</span>
+<span class="counter" hidden="" id="contadorAvisos">0</span>
+</button>
+</nav><div class="side-foot"><span>RitaQ©</span><span class="dot">·</span><span>LifeLearning Consultoría</span></div></aside></div></div>
+<script src="js/sesion.js"></script><script src="data/maestro_clientes.js"></script><script src="js/politicas_visor.js"></script>
+<script>
+(function(){'use strict';
+const sesion=window.RitaQSesion&&RitaQSesion.obtener();if(!sesion||sesion.perfil!=='EMPRESA'){location.replace('index.html');return}
+const read=(key)=>{try{return JSON.parse(localStorage.getItem(key)||'null')}catch(_){return null}};
+const base=window.RITAQ_CLIENTES_BASE||[];
+const guardados=read('RITAQ_CLIENTES_V1')||read('RITAQ_CLIENTES_CACHE_V2');
+const clientes=Array.isArray(guardados)?guardados:base;
+const codigo=String(sesion.codigoCliente||'').toUpperCase();
+const cliente=clientes.find(c=>[c.id,c.codigo_cliente,c.usuario_acceso].some(v=>String(v||'').toUpperCase()===codigo));
+const nombre=cliente?.razon_social||sesion.nombre||codigo||'CLIENTE';
+document.getElementById('rqNombreCliente').textContent=nombre;
+document.getElementById('tituloInicio').textContent=nombre;
+document.getElementById('usuarioActivo').textContent=sesion.usuario||codigo;
+const logo=cliente?.logo_blanco||cliente?.logoBlanco||'';
+if(typeof logo==='string'&&logo.trim()){
+ const img=document.getElementById('rqLogoCliente');
+ // Solo ruta local o URL de imagen, nunca HTML.
+ if(/^(https?:\/\/|data:image\/|assets\/)/i.test(logo)){img.src=logo;img.style.display='block';img.onerror=()=>{img.style.display='none'}}
+}
+const ids=new Set([cliente?.id,cliente?.codigo_cliente,cliente?.usuario_acceso].filter(Boolean).map(String));
+const getDocs=()=>read('RITAQ_POLITICAS_COMPROMISOS_V1')||[];
+const assign=()=>read('RITAQ_POLITICAS_ASIGNACIONES_V2')||{};
+const tienePoliticas=()=>Array.isArray(getDocs())&&getDocs().some(d=>d.estado!=='Obsoleto'&&((assign()[d.numeroMaestro]||assign()[d.id]||d.clientes||[]).some(id=>ids.has(String(id)))));
+const btn2=document.querySelector('#menuCliente [data-num="2"]');
+function actualizar(){if(tienePoliticas()){btn2.disabled=false;btn2.removeAttribute('aria-disabled')}else{btn2.disabled=true;btn2.setAttribute('aria-disabled','true')}}
+actualizar();
+document.getElementById('menuCliente').addEventListener('click',e=>{
+ const b=e.target.closest('button.menu-btn');if(!b||b.disabled||b.dataset.num!=='2')return;
+ document.querySelectorAll('#menuCliente .menu-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+ document.getElementById('panelInicio').hidden=true;document.getElementById('panelModulo').hidden=false;
+ const contenido=document.getElementById('contenidoModulo');
+ RitaQPoliticasVisor.iniciar(contenido,document.getElementById('rq-politicas-cliente-estado'),sesion);
+});
+document.getElementById('btnSalir').addEventListener('click',()=>{RitaQSesion.cerrar();location.href='index.html'});
+})();
+</script></body></html>
