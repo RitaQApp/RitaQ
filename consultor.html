@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="consultor_visual_v3.css?v=20261001-1800">
   <link rel="stylesheet" href="css/gestion_usuarios.css">
   <link rel="stylesheet" href="css/politicas_compromisos.css">
+  <link rel="stylesheet" href="css/informacion_documentada.css">
   <style>
     /* Menú Otros integrado en el área central, sin alterar la barra lateral */
     .rq-otros-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
@@ -194,6 +195,7 @@
 <script src="data/maestro_clientes.js"></script>
 <script src="js/gestion_usuarios.js"></script>
 <script src="js/politicas_compromisos.js"></script>
+<script src="js/informacion_documentada.js"></script>
 <script>
 (function(){
   const menu = document.getElementById("menuConsultor");
@@ -221,7 +223,10 @@
     titulo.textContent = btn.dataset.title || "";
 
     const contenido = document.getElementById("contenidoModulo");
-    if(btn.dataset.num === "2"){
+    if(btn.dataset.num === "1" && window.RitaQDocumentacion){
+      contenido.className = "";
+      window.RitaQDocumentacion.consultor(contenido, titulo);
+    }else if(btn.dataset.num === "2"){
       mostrarPoliticas(contenido);
     }else if(btn.dataset.num === "12"){
       mostrarOtros(contenido);

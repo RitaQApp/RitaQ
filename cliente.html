@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="color-scheme" content="light"><meta name="theme-color" content="#0b5f82"><title>RitaQ© | Entorno Usuario</title>
-<link rel="stylesheet" href="consultor_visual_v3.css?v=20261001-1800"><link rel="stylesheet" href="css/politicas_compromisos.css">
+<link rel="stylesheet" href="consultor_visual_v3.css?v=20261001-1800"><link rel="stylesheet" href="css/politicas_compromisos.css"><link rel="stylesheet" href="css/informacion_documentada.css">
 <style>
 /* Ajustes exclusivos del visor; ningún cambio en el consultor */
 @font-face{font-family:Tecnico;src:url('assets/tecnico_regular.ttf') format('truetype');font-weight:400;font-style:normal}
@@ -11,15 +11,15 @@
 /* Categorías ISO: mismo código cromático que el consultor. */
 .rq-pc-visor-layout .rq-pc-categoria{
  display:block;text-align:left;min-height:132px;width:100%;padding:20px 23px;
- background:#fff;border:2px solid var(--norma-color,#0b5f82);
+ background:color-mix(in srgb,var(--norma-color,#0b5f82) 18%,white);border:2px solid var(--norma-color,#0b5f82);
  color:var(--norma-color,#0b5f82);font-family:Tecnico,Arial,sans-serif;
  font-size:22px;line-height:1.24;font-weight:400;cursor:pointer;
- transition:background-color .15s ease;
+ transition:background-color .15s ease, opacity .15s ease;
 }
-.rq-pc-visor-layout .rq-pc-categoria:not(:disabled):hover{background:color-mix(in srgb,var(--norma-color,#0b5f82) 9%,white)}
+.rq-pc-visor-layout .rq-pc-categoria:not(:disabled):hover{background:color-mix(in srgb,var(--norma-color,#0b5f82) 24%,white)}
 .rq-pc-visor-layout .rq-pc-categoria:disabled,
 .rq-pc-visor-layout .rq-pc-categoria:disabled:hover{
- opacity:.38;cursor:not-allowed;background:#fff;
+ opacity:.48;cursor:not-allowed;background:color-mix(in srgb,var(--norma-color,#0b5f82) 8%,white);
  border-color:var(--norma-color,#0b5f82);color:var(--norma-color,#0b5f82);
 }
 .rq-pc-visor-layout .rq-pc-visor-card{border:1px solid #b8d0dc;background:#fff;padding:18px;margin:14px 0}
@@ -82,7 +82,7 @@
 <span class="counter" hidden="" id="contadorAvisos">0</span>
 </button>
 </nav><div class="side-foot"><span>RitaQ©</span><span class="dot">·</span><span>LifeLearning Consultoría</span></div></aside></div></div>
-<script src="js/sesion.js"></script><script src="data/maestro_clientes.js"></script><script src="js/politicas_visor.js"></script>
+<script src="js/sesion.js"></script><script src="data/maestro_clientes.js"></script><script src="js/politicas_visor.js"></script><script src="js/informacion_documentada.js"></script>
 <script>
 (function(){'use strict';
 const sesion=window.RitaQSesion&&RitaQSesion.obtener();if(!sesion||sesion.perfil!=='EMPRESA'){location.replace('index.html');return}
@@ -106,15 +106,17 @@ const ids=new Set([cliente?.id,cliente?.codigo_cliente,cliente?.usuario_acceso].
 const getDocs=()=>read('RITAQ_POLITICAS_COMPROMISOS_V1')||[];
 const assign=()=>read('RITAQ_POLITICAS_ASIGNACIONES_V2')||{};
 const tienePoliticas=()=>Array.isArray(getDocs())&&getDocs().some(d=>d.estado!=='Obsoleto'&&((assign()[d.numeroMaestro]||assign()[d.id]||d.clientes||[]).some(id=>ids.has(String(id)))));
+const btn1=document.querySelector('#menuCliente [data-num="1"]');
 const btn2=document.querySelector('#menuCliente [data-num="2"]');
-function actualizar(){if(tienePoliticas()){btn2.disabled=false;btn2.removeAttribute('aria-disabled')}else{btn2.disabled=true;btn2.setAttribute('aria-disabled','true')}}
+function actualizar(){if(window.RitaQDocumentacion && RitaQDocumentacion.tieneCliente(cliente)){btn1.disabled=false;btn1.removeAttribute('aria-disabled')}else{btn1.disabled=true;btn1.setAttribute('aria-disabled','true')}if(tienePoliticas()){btn2.disabled=false;btn2.removeAttribute('aria-disabled')}else{btn2.disabled=true;btn2.setAttribute('aria-disabled','true')}}
 actualizar();
 document.getElementById('menuCliente').addEventListener('click',e=>{
- const b=e.target.closest('button.menu-btn');if(!b||b.disabled||b.dataset.num!=='2')return;
+ const b=e.target.closest('button.menu-btn');if(!b||b.disabled||!['1','2'].includes(b.dataset.num))return;
  document.querySelectorAll('#menuCliente .menu-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');
  document.getElementById('panelInicio').hidden=true;document.getElementById('panelModulo').hidden=false;
  const contenido=document.getElementById('contenidoModulo');
- RitaQPoliticasVisor.iniciar(contenido,document.getElementById('rq-politicas-cliente-estado'),sesion);
+ if(b.dataset.num==='1'){document.getElementById('tituloModulo').textContent='Información Documentada y Sistema';RitaQDocumentacion.cliente(contenido,cliente)}
+ else{document.getElementById('tituloModulo').textContent='Políticas y Compromisos';RitaQPoliticasVisor.iniciar(contenido,document.getElementById('rq-politicas-cliente-estado'),sesion)}
 });
 document.getElementById('btnSalir').addEventListener('click',()=>{RitaQSesion.cerrar();location.href='index.html'});
 })();
