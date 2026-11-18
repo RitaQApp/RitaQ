@@ -48,7 +48,10 @@
   function guardarClientes() {
     try {
       localStorage.setItem(CACHE_KEY, JSON.stringify(clientes));
-    } catch (_) {}
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   function nuevoId() {
@@ -153,8 +156,127 @@
             <span class="gu-gordito-arrow">›</span>
           </button>
 
+          ${puedeGestionarInstalaciones() ? `
+            <button class="gu-gordito" type="button" data-gu-tab="instalaciones">
+              <span class="gu-gordito-num">6</span>
+              <span>
+                <span class="gu-gordito-title">Instalaciones</span>
+                <span class="gu-gordito-sub">Alta y consulta de instalaciones por organización.</span>
+              </span>
+              <span class="gu-gordito-arrow">›</span>
+            </button>` : ""}
+
         </div>
       </div>`;
+  }
+
+  function puedeGestionarInstalaciones() {
+    const perfil = window.RitaQSesion?.obtener()?.perfil;
+    return perfil === "CONSULTOR" || perfil === "SUPERADMIN";
+  }
+
+  function mostrarInstalaciones() {
+    cargarClientes();
+    const opciones = clientes.map(c => `
+      <option value="${escapar(c.id)}">${escapar(c.razon_social || c.codigo_cliente || c.id)}</option>`).join("");
+    host.innerHTML = `
+      <div class="gestion-usuarios">
+        ${barraVolver("Instalaciones")}
+        <div class="gu-filtros">
+          <label for="guInstalacionesCliente">Organización cliente</label>
+          <select id="guInstalacionesCliente">
+            <option value="">Seleccionar organización</option>
+            ${opciones}
+          </select>
+        </div>
+        <div id="guInstalacionesPanel" hidden>
+          <form class="gu-form">
+            <h3 class="gu-form-title">Alta de instalación</h3>
+            <div class="gu-grid">
+              <div class="gu-field">
+                <label for="guInstalacionNombre">Nombre de la instalación</label>
+                <input id="guInstalacionNombre" name="nombre" required>
+              </div>
+              <div class="gu-field">
+                <label for="guInstalacionDireccion">Dirección (opcional)</label>
+                <input id="guInstalacionDireccion" name="direccion">
+              </div>
+            </div>
+            <div class="gu-actions">
+              <button class="gu-primary" type="submit">DAR DE ALTA</button>
+            </div>
+            <p role="status"></p>
+          </form>
+          <div id="guInstalacionesLista"></div>
+        </div>
+      </div>`;
+
+    const selector = host.querySelector("#guInstalacionesCliente");
+    const panel = host.querySelector("#guInstalacionesPanel");
+    const lista = host.querySelector("#guInstalacionesLista");
+    const formulario = panel.querySelector("form");
+    const estado = formulario.querySelector('[role="status"]');
+
+    function seleccionada() {
+      return clientes.find(c => String(c.id) === selector.value && selector.value !== "");
+    }
+
+    function mostrarLista(organizacion) {
+      panel.hidden = !organizacion;
+      if (!organizacion) return;
+      const instalaciones = organizacion.instalaciones || [];
+      lista.innerHTML = instalaciones.length ? `
+        <div class="gu-table-wrap">
+          <table class="gu-table">
+            <thead><tr><th scope="col">Instalación</th><th scope="col">Dirección</th></tr></thead>
+            <tbody>${instalaciones.map(i => `
+              <tr><td>${escapar(i.nombre)}</td><td>${escapar(i.direccion || "—")}</td></tr>`).join("")}</tbody>
+          </table>
+        </div>` : "<p>Esta organización todavía no tiene instalaciones.</p>";
+    }
+
+    selector.addEventListener("change", function () {
+      cargarClientes();
+      formulario.reset();
+      estado.textContent = "";
+      mostrarLista(seleccionada());
+    });
+
+    formulario.addEventListener("submit", function (evento) {
+      evento.preventDefault();
+      if (!puedeGestionarInstalaciones()) return;
+      cargarClientes();
+      const organizacion = seleccionada();
+      if (!organizacion) {
+        estado.textContent = "Selecciona una organización disponible.";
+        return;
+      }
+      const nombre = formulario.elements.nombre.value.trim();
+      const direccion = formulario.elements.direccion.value.trim();
+      if (!nombre) {
+        estado.textContent = "Escribe el nombre de la instalación.";
+        formulario.elements.nombre.focus();
+        return;
+      }
+      const instalaciones = organizacion.instalaciones || [];
+      const duplicada = instalaciones.some(i =>
+        i.nombre.localeCompare(nombre, "es", { sensitivity: "accent" }) === 0 &&
+        (i.direccion || "").localeCompare(direccion, "es", { sensitivity: "accent" }) === 0);
+      if (duplicada) {
+        estado.textContent = "Ya existe una instalación con ese nombre y dirección en esta organización.";
+        return;
+      }
+      organizacion.instalaciones = [...instalaciones, { id: crypto.randomUUID(), nombre, direccion }];
+      if (!guardarClientes()) {
+        cargarClientes();
+        estado.textContent = "No se pudo guardar la instalación en este navegador.";
+        return;
+      }
+      formulario.reset();
+      mostrarLista(organizacion);
+      estado.textContent = "Instalación guardada en este navegador.";
+      formulario.elements.nombre.focus();
+    });
   }
 
   // Permisos por organización (números de los botones del menú lateral).
@@ -1006,6 +1128,7 @@
       if (destino === "credenciales") mostrarCredenciales();
       if (destino === "uso") mostrarUso();
       if (destino === "permisos") mostrarPermisos();
+      if (destino === "instalaciones" && puedeGestionarInstalaciones()) mostrarInstalaciones();
 
       return;
     }
