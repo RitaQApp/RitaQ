@@ -668,29 +668,218 @@
       .rq-informe tr, .rq-informe .firmas { break-inside: avoid; }
     }`;
 
-  async function imprimirSimulacro(registro, estado) {
-    const ventana = window.open("", "_blank");
-    if (!ventana) {
-      estado.textContent = "Permite las ventanas emergentes para guardar el informe en PDF.";
-      return;
+  const CLAVE_BARRAS_FIRMA = "RITAQ_BARRAS_FIRMA_SIMULACRO_V1";
+  const ROJO_FIRMA = "#b11b29";
+  let motorPdf;
+
+  function cargarMotorPdf() {
+    if (!motorPdf) {
+      motorPdf = new Promise((resolver, rechazar) => {
+        const script = document.createElement("script");
+        script.src = "https://cdn.jsdelivr.net/npm/pdfmake@0.2.20/build/pdfmake.min.js";
+        script.crossOrigin = "anonymous";
+        script.integrity = "sha384-G23ofMOEI98f9UnroUBjDi6Ll55Y5E6bOX4VAMJo0nIbuQRIxzn0g4athUOb58zs";
+        script.onload = () => resolver(window.pdfMake);
+        script.onerror = rechazar;
+        document.head.append(script);
+      }).catch(() => {
+        motorPdf = undefined;
+        throw new Error("No se pudo cargar el generador de PDF. Vuelve a intentarlo.");
+      });
     }
-    ventana.opener = null;
-    const regular = new URL("assets/tecnico_regular.ttf", document.baseURI).href;
-    const negrita = new URL("assets/tecnico_bold.ttf", document.baseURI).href;
-    ventana.document.open();
-    ventana.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8">
-      <title>${escapar("Simulacro - " + registro.centro.nombre + " - " + registro.fecha)}</title>
-      <style>@font-face{font-family:Tecnico;src:url("${regular}")}
-      @font-face{font-family:Tecnico;src:url("${negrita}");font-weight:700}
-      ${ESTILO_INFORME_SIMULACRO}</style></head><body>${informeSimulacro(registro)}</body></html>`);
-    ventana.document.close();
+    return motorPdf;
+  }
+
+  function cargarImagenPdf(url) {
+    return new Promise((resolver, rechazar) => {
+      const imagen = new Image();
+      imagen.onload = () => resolver(imagen);
+      imagen.onerror = () => rechazar(new Error("No se pudo leer la imagen del código de barras."));
+      imagen.src = url;
+    });
+  }
+
+  async function guardarBarrasFirma(archivo) {
+    const url = URL.createObjectURL(archivo);
     try {
-      await Promise.all([ventana.document.fonts.load("10pt Tecnico"), ventana.document.fonts.load("bold 10pt Tecnico")]);
-      if (!ventana.closed) ventana.print();
-    } catch (_) {
-      estado.textContent = "No se pudo cargar la fuente Técnica para imprimir el informe.";
-      ventana.close();
+      const imagen = await cargarImagenPdf(url);
+      if (imagen.naturalWidth !== 1944 || imagen.naturalHeight !== 184) {
+        throw new Error("Selecciona el PNG original «Firma Codigo Barras.png».");
+      }
+      const lienzo = document.createElement("canvas");
+      // La imagen original contiene también texto descriptivo. Solo se conserva la zona de barras.
+      lienzo.width = 1620;
+      lienzo.height = 106;
+      const ctx = lienzo.getContext("2d");
+      ctx.drawImage(imagen, 0, 15, lienzo.width, lienzo.height, 0, 0, lienzo.width, lienzo.height);
+      const datos = ctx.getImageData(0, 0, lienzo.width, lienzo.height);
+      for (let i = 0; i < datos.data.length; i += 4) {
+        const luminosidad = (datos.data[i] + datos.data[i + 1] + datos.data[i + 2]) / 3;
+        datos.data[i + 3] = Math.round(datos.data[i + 3] * (255 - luminosidad) / 255);
+        datos.data[i] = 177;
+        datos.data[i + 1] = 27;
+        datos.data[i + 2] = 41;
+      }
+      ctx.putImageData(datos, 0, 0);
+      const barras = lienzo.toDataURL("image/png");
+      localStorage.setItem(CLAVE_BARRAS_FIRMA, barras);
+      return barras;
+    } finally {
+      URL.revokeObjectURL(url);
     }
+  }
+
+  function fechaHoraGuardado(instante) {
+    const opciones = { timeZone: "Europe/Madrid" };
+    return {
+      fecha: new Intl.DateTimeFormat("es-ES", { ...opciones, day: "2-digit", month: "2-digit", year: "numeric" }).format(instante),
+      hora: new Intl.DateTimeFormat("es-ES", { ...opciones, hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).format(instante)
+    };
+  }
+
+  async function cartelaFirmaPdf(barras, instante) {
+    const [imagen] = await Promise.all([cargarImagenPdf(barras), document.fonts.load('27px Tecnico')]);
+    const { fecha, hora } = fechaHoraGuardado(instante);
+    const lienzo = document.createElement("canvas");
+    lienzo.width = 126;
+    lienzo.height = 1620;
+    const ctx = lienzo.getContext("2d");
+    ctx.translate(0, lienzo.height);
+    ctx.rotate(-Math.PI / 2);
+    ctx.strokeStyle = ctx.fillStyle = ROJO_FIRMA;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(3, 3, 1614, 120);
+    ctx.font = "27px Tecnico";
+    ctx.textBaseline = "top";
+    ctx.fillText("FIRMADO ELECTRONICAMENTE POR: Ángel M. de Llaguno en fecha " + fecha + " a la hora " + hora, 20, 10, 1580);
+    ctx.fillText("proveedor de la Firma: AC FNMT Usuarios", 20, 43);
+    ctx.drawImage(imagen, 20, 78, 1580, 32);
+    return lienzo.toDataURL("image/png");
+  }
+
+  function textoExportado(nodo, negrita = false) {
+    if (nodo.nodeType === 3) return [{ text: nodo.textContent.replaceAll("—", "-"), bold: negrita }];
+    if (nodo.classList?.contains("casilla")) {
+      return [{ text: nodo.classList.contains("marcada") ? "[X] " : "[ ] ", bold: negrita }];
+    }
+    return [...nodo.childNodes].flatMap(hijo => textoExportado(hijo, negrita || nodo.nodeName === "STRONG"));
+  }
+
+  function bloquesExportados(elemento) {
+    return [...elemento.children].flatMap(nodo => {
+      if (nodo.matches("h1, h2, p")) {
+        const titulo = nodo.matches("h1, h2");
+        const centrado = nodo.matches("h1, .anexo-numero");
+        return [{
+          text: textoExportado(nodo, titulo),
+          fontSize: nodo.matches("h1") ? 15 : titulo ? 12 : 10.5,
+          alignment: centrado ? "center" : "left",
+          margin: [0, titulo ? 5 : 0, 0, titulo ? 6 : 3]
+        }];
+      }
+      if (nodo.matches("table")) {
+        const filas = [...nodo.rows];
+        const anexo = filas[0].cells.length === 6;
+        const widths = anexo ? [22, "*", 20, 20, 23, 84] : ["*", 112, 97];
+        const body = filas.map(fila => [...fila.cells].map(celda =>
+          ({ text: textoExportado(celda, celda.nodeName === "TH"), fontSize: anexo ? 9 : 10.5,
+            margin: anexo ? [1, 1, 1, 1] : [2, 2, 2, 2] })));
+        return [{ table: { headerRows: 1, widths, body }, margin: [0, 4, 0, 5] }];
+      }
+      if (nodo.matches(".firmas")) {
+        return [{ columns: bloquesExportados(nodo), columnGap: 12, margin: [0, 18, 0, 0] }];
+      }
+      const interior = bloquesExportados(nodo);
+      if (nodo.matches(".hoja") && interior.length) interior[0].pageBreak = "before";
+      return interior;
+    });
+  }
+
+  function definicionPdfSimulacro(informe, cartela) {
+    return {
+      pageSize: "A4",
+      pageMargins: [36, 36, 78, 36],
+      defaultStyle: { font: "Tecnico", fontSize: 10.5, lineHeight: 1.12, color: "#111111" },
+      background: (pagina, medida) => pagina === 1
+        ? { image: cartela, width: 42, height: 540, absolutePosition: { x: medida.width - 60, y: 145 } }
+        : null,
+      content: bloquesExportados(informe)
+    };
+  }
+
+  async function descargarPdfSimulacro(registro, informe, barras, estado) {
+    estado.textContent = "Generando el PDF para firma…";
+    const [pdf, cartela] = await Promise.all([cargarMotorPdf(), cartelaFirmaPdf(barras, new Date())]);
+    const fuente = peso => new URL("assets/tecnico_" + peso + ".ttf", document.baseURI).href;
+    const fuentes = { Tecnico: {
+      normal: fuente("regular"), bold: fuente("bold"),
+      italics: fuente("regularitalic"), bolditalics: fuente("bolditalic")
+    } };
+    const nombre = "simulacro-" + registro.fecha + "-" + registro.hora.replace(":", "") + "-para-firmar.pdf";
+    pdf.createPdf(definicionPdfSimulacro(informe, cartela), undefined, fuentes).download(nombre, () => {
+      estado.textContent = "PDF preparado para firma.";
+    });
+  }
+
+  function conectarBarrasFirma(contenedor) {
+    const ajustes = contenedor.querySelector("[data-config-barras]");
+    const archivo = ajustes.querySelector("[type=file]");
+    const entrada = ajustes.querySelector("textarea");
+    const estado = ajustes.querySelector('[role="status"]');
+    ajustes.hidden = Boolean(localStorage.getItem(CLAVE_BARRAS_FIRMA));
+    archivo.addEventListener("change", async () => {
+      if (!archivo.files[0]) return;
+      try {
+        await guardarBarrasFirma(archivo.files[0]);
+        ajustes.hidden = true;
+      } catch (error) {
+        estado.textContent = error.message;
+      } finally {
+        archivo.value = "";
+      }
+    });
+    entrada.addEventListener("paste", async evento => {
+      evento.preventDefault();
+      try {
+        const barras = evento.clipboardData.getData("text/plain").trim();
+        if (!/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(barras)) {
+          throw new Error("El código de barras debe ser una imagen PNG preparada para RitaQ.");
+        }
+        const imagen = await cargarImagenPdf(barras);
+        if (imagen.naturalWidth !== 1620 || imagen.naturalHeight !== 106) {
+          throw new Error("La imagen no tiene el formato de código de barras de RitaQ.");
+        }
+        localStorage.setItem(CLAVE_BARRAS_FIRMA, barras);
+        ajustes.hidden = true;
+        contenedor.querySelector("[data-sim-estado]").textContent = "Código de barras guardado en este navegador.";
+      } catch (error) {
+        estado.textContent = error.message;
+      }
+    });
+    return ajustes;
+  }
+
+  function conectarDescargaSimulacro(vista, registro, ajustes) {
+    const boton = vista.querySelector("[data-descargar-pdf]");
+    const estado = vista.querySelector("[data-estado-pdf]");
+    boton.addEventListener("click", async () => {
+      try {
+        const barras = localStorage.getItem(CLAVE_BARRAS_FIRMA);
+        if (!barras) {
+          ajustes.hidden = false;
+          ajustes.open = true;
+          ajustes.scrollIntoView({ block: "center" });
+          estado.textContent = "Configura el código de barras para preparar el PDF.";
+          return;
+        }
+        boton.disabled = true;
+        await descargarPdfSimulacro(registro, vista.querySelector(".rq-informe"), barras, estado);
+      } catch (error) {
+        estado.textContent = error.message || "No se pudo preparar el PDF.";
+      } finally {
+        boton.disabled = false;
+      }
+    });
   }
 
   function mostrarSimulacros(contenedor, volver) {
@@ -714,11 +903,18 @@
           <select id="rqSimInstalacion" disabled><option value="">Seleccionar instalación</option></select>
         </div>
         <p data-sim-estado role="status"></p>
+        <details data-config-barras hidden>
+          <summary>Configurar código de barras del informe</summary>
+          <p><label>Seleccionar «Firma Codigo Barras.png» <input type="file" accept="image/png"></label></p>
+          <p><label>Pegar código de barras preparado <textarea rows="1"></textarea></label></p>
+          <p role="status"></p>
+        </details>
         <div data-sim-panel></div>
       </div>`;
     const organizacion = contenedor.querySelector("#rqSimOrganizacion");
     const instalacion = contenedor.querySelector("#rqSimInstalacion");
     const estado = contenedor.querySelector("[data-sim-estado]");
+    const ajustesBarras = conectarBarrasFirma(contenedor);
     const panel = contenedor.querySelector("[data-sim-panel]");
     let seleccion = 0;
     contenedor.querySelector(".rq-otros-volver").addEventListener("click", volver);
@@ -772,9 +968,10 @@
             historial.append(fila);
             boton.addEventListener("click", () => {
               vista.innerHTML = `<style>${ESTILO_INFORME_SIMULACRO}</style>
-                <div class="gu-actions"><button class="gu-primary" type="button">IMPRIMIR / GUARDAR PDF</button></div>
+                <div class="gu-actions"><button class="gu-primary" type="button" data-descargar-pdf>DESCARGAR PDF PARA FIRMA</button></div>
+                <p data-estado-pdf role="status"></p>
                 ${informeSimulacro(registro)}`;
-              vista.querySelector("button").addEventListener("click", () => imprimirSimulacro(registro, estado));
+              conectarDescargaSimulacro(vista, registro, ajustesBarras);
               vista.scrollIntoView({ block: "start" });
             });
           }
