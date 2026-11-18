@@ -234,18 +234,20 @@
     const titulo = formulario.querySelector("h3");
     let editando = null;
 
-    function prepararFormulario(instalacion) {
+    function prepararFormulario(instalacion, lectura = false) {
       formulario.reset();
       editando = instalacion?.id ?? null;
-      titulo.textContent = instalacion ? "Editar instalación" : "Alta de instalación";
+      titulo.textContent = lectura ? "Ficha de la instalación" : instalacion ? "Editar instalación" : "Alta de instalación";
       guardar.textContent = instalacion ? "GUARDAR CAMBIOS" : "DAR DE ALTA";
+      guardar.hidden = lectura;
       cancelar.hidden = !instalacion;
-      if (instalacion) {
-        for (const campo of Object.keys(DATOS_INSTALACION)) {
-          formulario.elements[campo].value = instalacion[campo] || "";
-        }
-        formulario.elements.plantas.value = (instalacion.plantas || []).join("\n");
+      cancelar.textContent = lectura ? "CERRAR" : "CANCELAR";
+      for (const campo of Object.keys(DATOS_INSTALACION)) {
+        formulario.elements[campo].readOnly = lectura;
+        formulario.elements[campo].value = instalacion?.[campo] || "";
       }
+      formulario.elements.plantas.readOnly = lectura;
+      formulario.elements.plantas.value = (instalacion?.plantas || []).join("\n");
       estado.textContent = "";
     }
 
@@ -256,14 +258,19 @@
     function mostrarLista(organizacion) {
       panel.hidden = !organizacion;
       if (!organizacion) return;
-      const instalaciones = organizacion.instalaciones || [];
+      const instalaciones = (organizacion.instalaciones || []).filter(i => !i.borrada);
       lista.innerHTML = instalaciones.length ? `
         <div class="gu-table-wrap">
           <table class="gu-table">
             <thead><tr><th scope="col">Instalación</th><th scope="col">Dirección</th><th scope="col">Acciones</th></tr></thead>
             <tbody>${instalaciones.map(i => `
               <tr><td>${escapar(i.nombre)}</td><td>${escapar(i.direccion || "—")}</td>
-              <td><button class="gu-mini" type="button" data-editar-instalacion="${escapar(i.id)}">Editar</button></td></tr>`).join("")}</tbody>
+              <td>
+                <button class="gu-mini" type="button" data-accion-instalacion="ver" data-instalacion="${escapar(i.id)}">VER</button>
+                <button class="gu-mini" type="button" data-accion-instalacion="editar" data-instalacion="${escapar(i.id)}">Editar</button>
+                <button class="gu-mini" type="button" data-accion-instalacion="borrar" data-instalacion="${escapar(i.id)}"
+                  style="background:#a3232a;border-color:#a3232a;color:#fff">BORRAR</button>
+              </td></tr>`).join("")}</tbody>
           </table>
         </div>` : "<p>Esta organización todavía no tiene instalaciones.</p>";
     }
@@ -276,19 +283,37 @@
 
     cancelar.addEventListener("click", () => prepararFormulario(null));
     lista.addEventListener("click", evento => {
-      const boton = evento.target.closest("[data-editar-instalacion]");
-      if (!boton) return;
+      const boton = evento.target.closest("[data-accion-instalacion]");
+      if (!boton || !puedeGestionarInstalaciones()) return;
       cargarClientes();
-      const instalacion = seleccionada()?.instalaciones?.find(i => String(i.id) === boton.dataset.editarInstalacion);
-      if (instalacion) {
-        prepararFormulario(instalacion);
-        formulario.elements.nombre.focus();
+      const organizacion = seleccionada();
+      const instalacion = organizacion?.instalaciones?.find(i => !i.borrada && String(i.id) === boton.dataset.instalacion);
+      if (!instalacion) {
+        mostrarLista(organizacion);
+        estado.textContent = "La instalación ya no está disponible.";
+        return;
       }
+      const accion = boton.dataset.accionInstalacion;
+      if (accion !== "borrar") {
+        prepararFormulario(instalacion, accion === "ver");
+        formulario.elements.nombre.focus();
+        return;
+      }
+      if (!window.confirm(`¿Borrar «${instalacion.nombre}» del catálogo de instalaciones? Su historial de simulacros se conservará.`)) return;
+      instalacion.borrada = true;
+      if (!guardarClientes()) {
+        cargarClientes();
+        estado.textContent = "No se pudo borrar la instalación en este navegador.";
+        return;
+      }
+      if (editando === instalacion.id) prepararFormulario(null);
+      mostrarLista(organizacion);
+      estado.textContent = "Instalación borrada del catálogo.";
     });
 
     formulario.addEventListener("submit", function (evento) {
       evento.preventDefault();
-      if (!puedeGestionarInstalaciones()) return;
+      if (guardar.hidden || !puedeGestionarInstalaciones()) return;
       cargarClientes();
       const organizacion = seleccionada();
       if (!organizacion) {
@@ -304,7 +329,7 @@
         return;
       }
       const instalaciones = organizacion.instalaciones || [];
-      const anterior = instalaciones.find(i => i.id === editando);
+      const anterior = instalaciones.find(i => !i.borrada && i.id === editando);
       if (editando !== null && !anterior) {
         estado.textContent = "La instalación ya no está disponible.";
         return;
@@ -316,7 +341,7 @@
         return;
       }
       const duplicada = instalaciones.some(i =>
-        i.id !== editando &&
+        !i.borrada && i.id !== editando &&
         i.nombre.localeCompare(nombre, "es", { sensitivity: "accent" }) === 0 &&
         (i.direccion || "").localeCompare(direccion, "es", { sensitivity: "accent" }) === 0);
       if (duplicada) {
@@ -705,7 +730,8 @@
       const cliente = organizaciones.find(c => String(c.id) === organizacion.value);
       instalacion.replaceChildren(new Option("Seleccionar instalación", ""));
       for (const i of cliente?.instalaciones || []) {
-        instalacion.add(new Option(i.direccion ? i.nombre + " · " + i.direccion : i.nombre, i.id));
+        const etiqueta = [i.nombre, i.direccion, i.borrada && "Borrada · solo historial"].filter(Boolean).join(" · ");
+        instalacion.add(new Option(etiqueta, i.id));
       }
       instalacion.disabled = !cliente;
       instalacion.dispatchEvent(new Event("change"));
@@ -721,7 +747,7 @@
       const porPagina = 25;
       let pagina = 0;
       panel.innerHTML = `
-        <div class="gu-actions"><button class="gu-primary" type="button" data-alta>ALTA DE SIMULACRO</button></div>
+        ${sede.borrada ? "" : '<div class="gu-actions"><button class="gu-primary" type="button" data-alta>ALTA DE SIMULACRO</button></div>'}
         <div data-formulario hidden></div>
         <h2>Historial de la instalación</h2>
         <div data-historial></div>
@@ -769,7 +795,7 @@
         }
       }
 
-      panel.querySelector("[data-alta]").addEventListener("click", () => {
+      panel.querySelector("[data-alta]")?.addEventListener("click", () => {
         if (!sede.plantas?.length) {
           estado.textContent = "Añade las plantas a la ficha de esta instalación en Gestión de Usuarios.";
           return;
@@ -797,6 +823,12 @@
         formulario.addEventListener("submit", async evento => {
           evento.preventDefault();
           if (boton.disabled || !puedeGestionarInstalaciones()) return;
+          cargarClientes();
+          const vigente = clientes.find(c => c.id === cliente.id)?.instalaciones?.find(i => i.id === sede.id && !i.borrada);
+          if (!vigente) {
+            mensaje.textContent = "La instalación se ha borrado del catálogo.";
+            return;
+          }
           let registro;
           try {
             registro = datosSimulacro(formulario, cliente, sede);
