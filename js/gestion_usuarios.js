@@ -671,6 +671,33 @@
   const CLAVE_BARRAS_FIRMA = "RITAQ_BARRAS_FIRMA_SIMULACRO_V1";
   const ROJO_FIRMA = "#b11b29";
   let motorPdf;
+  let fuentesInforme;
+
+  function cargarFuentesSimulacro() {
+    if (!fuentesInforme) {
+      const archivos = ["tecnico_regular.ttf", "tecnico_bold.ttf"];
+      fuentesInforme = Promise.all(archivos.map(async nombre => {
+        const respuesta = await fetch(new URL("assets/" + nombre, document.baseURI));
+        if (!respuesta.ok) throw new Error("Fuente no disponible");
+        return respuesta.arrayBuffer();
+      })).then(async datos => {
+        const fuente = new FontFace("TecnicoCartelaRitaQ", datos[0]);
+        document.fonts.add(await fuente.load());
+        return Object.fromEntries(datos.map((archivo, indice) => {
+          const bytes = new Uint8Array(archivo);
+          let binario = "";
+          for (let i = 0; i < bytes.length; i += 16384) {
+            binario += String.fromCharCode(...bytes.subarray(i, i + 16384));
+          }
+          return [archivos[indice], btoa(binario)];
+        }));
+      }).catch(() => {
+        fuentesInforme = undefined;
+        throw new Error("No se pudo cargar la fuente Técnica del informe.");
+      });
+    }
+    return fuentesInforme;
+  }
 
   function cargarMotorPdf() {
     if (!motorPdf) {
@@ -738,7 +765,7 @@
   }
 
   async function cartelaFirmaPdf(barras, instante) {
-    const [imagen] = await Promise.all([cargarImagenPdf(barras), document.fonts.load('27px Tecnico')]);
+    const imagen = await cargarImagenPdf(barras);
     const { fecha, hora } = fechaHoraGuardado(instante);
     const lienzo = document.createElement("canvas");
     lienzo.width = 126;
@@ -749,7 +776,7 @@
     ctx.strokeStyle = ctx.fillStyle = ROJO_FIRMA;
     ctx.lineWidth = 3;
     ctx.strokeRect(3, 3, 1614, 120);
-    ctx.font = "27px Tecnico";
+    ctx.font = "27px TecnicoCartelaRitaQ";
     ctx.textBaseline = "top";
     ctx.fillText("FIRMADO ELECTRONICAMENTE POR: Ángel M. de Llaguno en fecha " + fecha + " a la hora " + hora, 20, 10, 1580);
     ctx.fillText("proveedor de la Firma: AC FNMT Usuarios", 20, 43);
@@ -809,14 +836,14 @@
 
   async function descargarPdfSimulacro(registro, informe, barras, estado) {
     estado.textContent = "Generando el PDF para firma…";
-    const [pdf, cartela] = await Promise.all([cargarMotorPdf(), cartelaFirmaPdf(barras, new Date())]);
-    const fuente = peso => new URL("assets/tecnico_" + peso + ".ttf", document.baseURI).href;
+    const [pdf, fuentesVirtuales] = await Promise.all([cargarMotorPdf(), cargarFuentesSimulacro()]);
+    const cartela = await cartelaFirmaPdf(barras, new Date());
     const fuentes = { Tecnico: {
-      normal: fuente("regular"), bold: fuente("bold"),
-      italics: fuente("regularitalic"), bolditalics: fuente("bolditalic")
+      normal: "tecnico_regular.ttf", bold: "tecnico_bold.ttf",
+      italics: "tecnico_regular.ttf", bolditalics: "tecnico_bold.ttf"
     } };
     const nombre = "simulacro-" + registro.fecha + "-" + registro.hora.replace(":", "") + "-para-firmar.pdf";
-    pdf.createPdf(definicionPdfSimulacro(informe, cartela), undefined, fuentes).download(nombre, () => {
+    pdf.createPdf(definicionPdfSimulacro(informe, cartela), undefined, fuentes, fuentesVirtuales).download(nombre, () => {
       estado.textContent = "PDF preparado para firma.";
     });
   }
