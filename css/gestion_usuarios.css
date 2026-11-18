@@ -700,3 +700,10 @@
     grid-template-columns:1fr;
   }
 }
+
+/* Permisos por organización: respeta tipografía y colores del módulo. */
+.gu-permisos-select{font:inherit;max-width:100%;min-width:260px;padding:9px;border:1px solid #8ca9b8;background:#fff;color:#183f54}
+.gu-permisos-lista{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px;margin:18px 0}
+.gu-permisos-fila{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #b8d0dc;background:#f7fbfd;cursor:pointer}
+.gu-permisos-fila input{width:18px;height:18px;accent-color:#0b5f82;flex:none}
+#guPermisosEstado{margin-top:12px;color:#0b5f82}
