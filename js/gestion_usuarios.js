@@ -693,92 +693,6 @@
     }
   }
 
-  let autoFirmaPreparada;
-  let firmaEnCurso = false;
-
-  function prepararAutoFirma() {
-    if (!autoFirmaPreparada) {
-      autoFirmaPreparada = new Promise((resolver, rechazar) => {
-        const script = document.createElement("script");
-        // AutoScript oficial de AutoFirma 1.9.2, fijado al commit de la versión.
-        script.src = "https://cdn.jsdelivr.net/gh/ctt-gob-es/clienteafirma@b4fe147c322932ebdd11e25db3134af934e0e832/"
-          + "afirma-ui-miniapplet-deploy/src/main/webapp/js/autoscript.js";
-        script.crossOrigin = "anonymous";
-        script.integrity = "sha384-F2mPlftZeXB0HJb+lwQbpi4OXcxuJmrQ5KCvank97CWgaVFZv4mEc2ZsmdAM+uGd2";
-        script.addEventListener("load", () => {
-          try {
-            const autoFirma = window.AutoScript;
-            autoFirma.cargarAppAfirma();
-            autoFirma.setStickySignatory(false);
-            resolver(autoFirma);
-          } catch (error) {
-            rechazar(error);
-          }
-        }, { once: true });
-        script.addEventListener("error", rechazar, { once: true });
-        document.head.append(script);
-      }).catch(error => {
-        autoFirmaPreparada = undefined;
-        throw error;
-      });
-    }
-    return autoFirmaPreparada;
-  }
-
-  function conectarFirmaSimulacro(panel, registro) {
-    const estado = panel.querySelector('[role="status"]');
-    const botones = [...panel.querySelectorAll("[data-firma]")];
-    const activar = disponible => botones.forEach(boton => { boton.disabled = !disponible; });
-    const movil = /Android|iPad|iPhone/i.test(navigator.userAgent)
-      || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
-
-    panel.addEventListener("toggle", async () => {
-      if (!panel.open) return;
-      if (movil) {
-        estado.textContent = "Abre el informe en un ordenador con AutoFirma instalado para usar la firma integrada.";
-        return;
-      }
-      estado.textContent = "Preparando AutoFirma…";
-      try {
-        await prepararAutoFirma();
-        activar(true);
-        estado.textContent = "";
-      } catch (_) {
-        estado.textContent = "No se pudo iniciar la integración. Puedes abrir el PDF guardado en la aplicación AutoFirma y firmarlo allí.";
-      }
-    });
-
-    for (const boton of botones) {
-      boton.addEventListener("click", () => {
-        if (firmaEnCurso) {
-          estado.textContent = "Hay una operación de firma en curso. Termínala o cancélala en AutoFirma.";
-          return;
-        }
-        firmaEnCurso = true;
-        activar(false);
-        estado.textContent = "Selecciona el PDF en AutoFirma, elige el certificado, sitúa la firma visible y guarda el resultado.";
-        function terminar(mensaje) {
-          firmaEnCurso = false;
-          activar(true);
-          estado.textContent = mensaje;
-        }
-        const operacion = boton.dataset.firma;
-        const sufijo = operacion === "cosign" ? "cofirmado" : "firmado";
-        const nombre = `simulacro-${registro.fecha}-${registro.hora.replace(":", "")}-${sufijo}.pdf`;
-        try {
-          // Un archivo nulo abre el selector local de AutoFirma. El resultado se guarda desde AutoFirma.
-          window.AutoScript.signAndSaveToFile(operacion, null, "SHA256withRSA", "PAdES",
-            "visibleSignature=want\nfilenameExts=pdf\nfilenameSaveExts=pdf\nfilters=nonexpired:", nombre,
-            () => terminar("AutoFirma ha guardado el PDF firmado en la carpeta que elegiste."),
-            tipo => terminar(/cancel/i.test(tipo || "") ? "Firma cancelada." :
-              "AutoFirma no pudo completar la firma. Comprueba que está instalado y que el certificado está disponible."));
-        } catch (_) {
-          terminar("No se pudo iniciar AutoFirma. Abre el PDF guardado directamente en la aplicación para firmarlo.");
-        }
-      });
-    }
-  }
-
   function mostrarSimulacros(contenedor, volver) {
     if (!puedeGestionarInstalaciones()) return false;
     cargarClientes();
@@ -858,19 +772,9 @@
             historial.append(fila);
             boton.addEventListener("click", () => {
               vista.innerHTML = `<style>${ESTILO_INFORME_SIMULACRO}</style>
-                <div class="gu-actions"><button class="gu-primary" type="button" data-imprimir>IMPRIMIR / GUARDAR PDF</button></div>
-                <details data-firma-informe>
-                  <summary>Firma electrónica</summary>
-                  <p>Guarda el informe en PDF. Para añadir otra firma, selecciona en AutoFirma el PDF que ya está firmado.</p>
-                  <div class="gu-actions">
-                    <button class="gu-primary" type="button" data-firma="sign" disabled>FIRMAR PDF CON AUTOFIRMA</button>
-                    <button class="gu-secondary" type="button" data-firma="cosign" disabled>AÑADIR OTRA FIRMA</button>
-                  </div>
-                  <p role="status"></p>
-                </details>
+                <div class="gu-actions"><button class="gu-primary" type="button">IMPRIMIR / GUARDAR PDF</button></div>
                 ${informeSimulacro(registro)}`;
-              vista.querySelector("[data-imprimir]").addEventListener("click", () => imprimirSimulacro(registro, estado));
-              conectarFirmaSimulacro(vista.querySelector("[data-firma-informe]"), registro);
+              vista.querySelector("button").addEventListener("click", () => imprimirSimulacro(registro, estado));
               vista.scrollIntoView({ block: "start" });
             });
           }
