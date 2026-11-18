@@ -467,6 +467,67 @@
     }
   }
 
+  async function buscarSimulacrosSinFicha(catalogo) {
+    if (indexedDB.databases && !(await indexedDB.databases()).some(base => base.name === "RitaQ-simulacros")) {
+      return [];
+    }
+    const conocidas = new Map(catalogo.map(cliente => [
+      String(cliente.id), new Set((cliente.instalaciones || []).map(sede => String(sede.id)))
+    ]));
+    const db = await abrirRegistroSimulacros();
+    try {
+      return await new Promise((resolver, rechazar) => {
+        const registros = [];
+        const peticion = db.transaction("simulacros").objectStore("simulacros").openCursor();
+        peticion.onerror = () => rechazar(peticion.error);
+        peticion.onsuccess = () => {
+          const cursor = peticion.result;
+          if (!cursor) {
+            resolver(registros);
+            return;
+          }
+          const registro = cursor.value;
+          if (registro.centro && !conocidas.get(String(registro.organizacionId))?.has(String(registro.instalacionId))) {
+            registros.push(registro);
+          }
+          cursor.continue();
+        };
+      });
+    } finally {
+      db.close();
+    }
+  }
+
+  function incluirFichasRecuperadas(organizaciones, catalogo, registros) {
+    const ordenados = [...registros].sort((a, b) =>
+      (b.fecha + b.hora).localeCompare(a.fecha + a.hora));
+    for (const registro of ordenados) {
+      let organizacion = organizaciones.find(c => String(c.id) === String(registro.organizacionId));
+      if (!organizacion) {
+        const conocida = catalogo.find(c => String(c.id) === String(registro.organizacionId));
+        organizacion = { ...conocida, id: registro.organizacionId, instalaciones: [] };
+        organizaciones.push(organizacion);
+      }
+      if (organizacion.instalaciones.some(sede => String(sede.id) === String(registro.instalacionId))) continue;
+      organizacion.instalaciones.push({
+        ...registro.centro,
+        id: registro.instalacionId,
+        plantas: (registro.plantas || []).map(planta => planta.nombre),
+        recuperada: true
+      });
+    }
+  }
+
+  function descargarRescateSimulacros(registros) {
+    const archivo = new Blob([JSON.stringify({ version: 1, simulacros: registros }, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(archivo);
+    const enlace = document.createElement("a");
+    enlace.href = url;
+    enlace.download = "RitaQ-rescate-simulacros.json";
+    enlace.click();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  }
+
   function campoSimulacro(campo, etiqueta, atributos = "") {
     return `<div class="gu-field"><label for="rq-sim-${campo}">${etiqueta}</label>
       <input id="rq-sim-${campo}" name="${campo}" ${atributos}></div>`;
@@ -784,57 +845,136 @@
     return lienzo.toDataURL("image/png");
   }
 
-  function textoExportado(nodo, negrita = false) {
-    if (nodo.nodeType === 3) return [{ text: nodo.textContent.replaceAll("—", "-"), bold: negrita }];
-    if (nodo.classList?.contains("casilla")) {
-      return [{ text: nodo.classList.contains("marcada") ? "[X] " : "[ ] ", bold: negrita }];
-    }
-    return [...nodo.childNodes].flatMap(hijo => textoExportado(hijo, negrita || nodo.nodeName === "STRONG"));
-  }
-
-  function bloquesExportados(elemento) {
-    return [...elemento.children].flatMap(nodo => {
-      if (nodo.matches("h1, h2, p")) {
-        const titulo = nodo.matches("h1, h2");
-        const centrado = nodo.matches("h1, .anexo-numero");
-        return [{
-          text: textoExportado(nodo, titulo),
-          fontSize: nodo.matches("h1") ? 15 : titulo ? 12 : 10.5,
-          alignment: centrado ? "center" : "left",
-          margin: [0, titulo ? 5 : 0, 0, titulo ? 6 : 3]
-        }];
-      }
-      if (nodo.matches("table")) {
-        const filas = [...nodo.rows];
-        const anexo = filas[0].cells.length === 6;
-        const widths = anexo ? [22, "*", 20, 20, 23, 84] : ["*", 112, 97];
-        const body = filas.map(fila => [...fila.cells].map(celda =>
-          ({ text: textoExportado(celda, celda.nodeName === "TH"), fontSize: anexo ? 9 : 10.5,
-            margin: anexo ? [1, 1, 1, 1] : [2, 2, 2, 2] })));
-        return [{ table: { headerRows: 1, widths, body }, margin: [0, 4, 0, 5] }];
-      }
-      if (nodo.matches(".firmas")) {
-        return [{ columns: bloquesExportados(nodo), columnGap: 12, margin: [0, 18, 0, 0] }];
-      }
-      const interior = bloquesExportados(nodo);
-      if (nodo.matches(".hoja") && interior.length) interior[0].pageBreak = "before";
-      return interior;
+  function definicionPdfSimulacro(registro, cartela) {
+    const { centro, recuentos, valoraciones, incidencias } = registro;
+    const duracion = segundos => Math.floor(segundos / 60) + " min " + segundos % 60 + " s";
+    const dato = valor => valor || valor === 0 ? String(valor) : "-";
+    const texto = (value, propiedades = {}) => ({ text: value, ...propiedades });
+    const encabezado = value => texto(value, { bold: true, fontSize: 11, margin: [0, 0, 0, 6] });
+    const rotulo = (etiqueta, valor) => texto([
+      { text: etiqueta + " ", bold: true }, dato(valor)
+    ], { margin: [0, 0, 0, 3] });
+    const opciones = (...campos) => campos.map(campo => {
+      const [etiqueta, disponibles] = VALORACIONES[campo];
+      return rotulo(etiqueta + ":", disponibles.map(opcion =>
+        (opcion === valoraciones[campo] ? "[X] " : "[ ] ") + opcion).join("    "));
     });
-  }
+    const observaciones = valor => [
+      encabezado("OBSERVACIONES:"),
+      texto(dato(valor), { margin: [0, 2, 0, 5] })
+    ];
+    const borde = {
+      hLineWidth: () => .7, vLineWidth: () => .7,
+      hLineColor: () => "#202020", vLineColor: () => "#202020"
+    };
+    const caja = (filas, alturas) => ({
+      table: { widths: ["*"], heights: alturas, body: filas.map(stack => [{ stack }]) },
+      layout: { ...borde, paddingLeft: () => 7, paddingRight: () => 7, paddingTop: () => 7, paddingBottom: () => 7 },
+      margin: [0, 0, 0, 9]
+    });
+    const tabla = (cabecera, filas, widths, fontSize = 9.5) => ({
+      table: { headerRows: 1, widths, body: [
+        cabecera.map(titulo => texto(titulo, { bold: true, fontSize })),
+        ...filas.map(fila => fila.map(value => texto(dato(value), { fontSize })))
+      ] },
+      layout: { ...borde, paddingLeft: () => 4, paddingRight: () => 4, paddingTop: () => 3, paddingBottom: () => 3 },
+      margin: [0, 2, 0, 7]
+    });
+    const titulo = (value, size, margen) =>
+      texto(value, { alignment: "center", bold: true, fontSize: size, margin: margen });
+    const inicioPagina = bloque => ({ ...bloque, pageBreak: "before" });
+    const fecha = fechaInforme(registro.fecha);
+    const fechaHora = fecha + " · " + registro.hora;
+    const direccionCompleta = [centro.direccion, centro.codigoPostal, centro.localidad].filter(Boolean).join(", ");
+    const contacto = [centro.telefono, centro.email].filter(Boolean).join(" · ");
+    const total = registro.plantas.reduce((suma, planta) => suma + planta.evacuados, 0);
+    const evacuacion = [
+      ["Total del centro", duracion(registro.edificio), total],
+      ...registro.plantas.map(p => [p.nombre, duracion(p.tiempo), p.evacuados])
+    ];
+    const firmas = () => [
+      rotulo("DIRECTOR/A:", registro.director),
+      texto(" ", { margin: [0, 0, 0, 18] }),
+      rotulo("FDO. TÉCNICO/A:", registro.tecnico)
+    ];
+    const tablaAnexo = registro.anexo ? tabla(
+      ["N.º", "CUESTIONARIO", "SÍ", "NO", "OBSERVACIONES"],
+      PREGUNTAS_ANEXO.map((pregunta, i) => {
+        const { respuesta, observaciones: detalle } = registro.anexo[i];
+        return [i + 1, pregunta, respuesta === "Sí" ? "X" : " ", respuesta === "No" ? "X" : " ",
+          [respuesta === "N/A" && "N/A", detalle].filter(Boolean).join(" · ") || " "];
+      }),
+      [19, "*", 21, 21, 105], 8.5
+    ) : caja([[encabezado("CUESTIONARIO"), texto("N/A")]], [44]);
 
-  function definicionPdfSimulacro(informe, cartela) {
     return {
       pageSize: "A4",
-      pageMargins: [78, 36, 36, 36],
-      defaultStyle: { font: "Tecnico", fontSize: 10.5, lineHeight: 1.12, color: "#111111" },
+      pageMargins: [73, 82, 55, 36],
+      defaultStyle: { font: "Tecnico", fontSize: 10.5, lineHeight: 1.08, color: "#111111" },
       background: pagina => pagina === 1
         ? { image: cartela, width: 42, height: 540, absolutePosition: { x: 18, y: 145 } }
         : null,
-      content: bloquesExportados(informe)
+      content: [
+        titulo("ANEXO III", 12, [0, 30, 0, 14]),
+        titulo("INFORME DE SIMULACRO DE EVACUACIÓN", 14, [0, 0, 0, 13]),
+        caja([[
+          rotulo("DENOMINACIÓN DEL CENTRO:", centro.nombre),
+          rotulo("DIRECCIÓN:", direccionCompleta),
+          rotulo("TELÉFONO/E-MAIL:", contacto),
+          rotulo("NIVELES EDUCATIVOS:", centro.niveles)
+        ]], [65]),
+        caja([[
+          rotulo("Fecha del simulacro:", fechaHora),
+          ...opciones("plan", "participacion"),
+          ...observaciones(incidencias.generales)
+        ]], [90]),
+        caja([
+          [
+            encabezado("TIEMPOS REALES DE LA EVACUACIÓN"),
+            tabla(["Planta", "Tiempo controlado", "N.º de evacuados"], evacuacion, ["*", 150, 114]),
+            rotulo("Tiempo hasta el punto de reunión y recuento:", duracion(registro.recuento)),
+            rotulo("Participantes:", `Menores: ${dato(recuentos.menores)} · Docentes: ${dato(recuentos.docentes)} · Servicios: ${dato(recuentos.servicios)} · Invitados: ${dato(recuentos.invitados)}`),
+            rotulo("Discapacidad o movilidad reducida:", `Menores: ${dato(recuentos.menoresDm)} · Personal: ${dato(recuentos.personalDm)}`),
+            ...observaciones(incidencias.tiempos)
+          ],
+          [...opciones("comportamiento"), ...observaciones(incidencias.menores)]
+        ], [194, 80]),
+        inicioPagina(caja([[
+          ...opciones("capacidad", "interferencias", "obstaculos", "estrechamientos"),
+          ...observaciones(incidencias.vias)
+        ]], [166])),
+        caja([
+          [encabezado("MEDIOS DE EMERGENCIA"), ...opciones("alarma", "alumbrado", "escaleras"), ...observaciones(incidencias.medios)],
+          [encabezado("Pudieron cortarse los suministros de:"), ...opciones("gas", "electricidad", "gasoleo", "agua")]
+        ], [104, 83]),
+        caja([[
+          encabezado("INCIDENTES NO PREVISTOS:"),
+          texto(dato(incidencias.imprevistas), { margin: [0, 0, 0, 6] }),
+          rotulo("Accidentes de personas:", registro.accidentes),
+          rotulo("Deterioros en el edificio:", registro.deteriorosEdificio),
+          rotulo("Deterioros en el mobiliario:", registro.deteriorosMobiliario)
+        ]], [103]),
+        inicioPagina(caja([[
+          encabezado("BALANCE GENERAL DEL SIMULACRO"),
+          rotulo("CONCLUSIONES:", registro.conclusiones),
+          rotulo("CONCLUSIONES PEDAGÓGICAS:", registro.pedagogicas),
+          rotulo("BALANCE GENERAL:", registro.balance),
+          rotulo("SUGERENCIAS:", registro.sugerencias)
+        ]], [220])),
+        ...firmas(),
+        inicioPagina(titulo("INFORME COMPLEMENTARIO SOBRE EL DESARROLLO DEL SIMULACRO ANUAL DE EVACUACIÓN EN RELACIÓN CON LAS PERSONAS CON DISCAPACIDAD O MOVILIDAD REDUCIDA", 12, [0, 0, 0, 8])),
+        rotulo("CENTRO:", centro.nombre),
+        rotulo("CÓDIGO:", centro.codigo),
+        rotulo("DIRECCIÓN:", centro.direccion),
+        rotulo("LOCALIDAD:", [centro.localidad, centro.codigoPostal && "C. POSTAL: " + centro.codigoPostal].filter(Boolean).join(" · ")),
+        tablaAnexo,
+        titulo([centro.localidad, fecha].filter(Boolean).join(", "), 10.5, [0, 8, 0, 8]),
+        ...firmas()
+      ]
     };
   }
 
-  async function descargarPdfSimulacro(registro, informe, barras, estado) {
+  async function descargarPdfSimulacro(registro, barras, estado) {
     estado.textContent = "Generando el PDF para firma…";
     const [pdf, fuentesVirtuales] = await Promise.all([cargarMotorPdf(), cargarFuentesSimulacro()]);
     const cartela = await cartelaFirmaPdf(barras, new Date());
@@ -843,7 +983,7 @@
       italics: "tecnico_regular.ttf", bolditalics: "tecnico_bold.ttf"
     } };
     const nombre = "simulacro-" + registro.fecha + "-" + registro.hora.replace(":", "") + "-para-firmar.pdf";
-    pdf.createPdf(definicionPdfSimulacro(informe, cartela), undefined, fuentes, fuentesVirtuales).download(nombre, () => {
+    pdf.createPdf(definicionPdfSimulacro(registro, cartela), undefined, fuentes, fuentesVirtuales).download(nombre, () => {
       estado.textContent = "PDF preparado para firma.";
     });
   }
@@ -900,7 +1040,7 @@
           return;
         }
         boton.disabled = true;
-        await descargarPdfSimulacro(registro, vista.querySelector(".rq-informe"), barras, estado);
+        await descargarPdfSimulacro(registro, barras, estado);
       } catch (error) {
         estado.textContent = error.message || "No se pudo preparar el PDF.";
       } finally {
@@ -912,7 +1052,9 @@
   function mostrarSimulacros(contenedor, volver) {
     if (!puedeGestionarInstalaciones()) return false;
     cargarClientes();
-    const organizaciones = clientes.filter(c => c.instalaciones?.length);
+    const catalogo = clientes;
+    const organizaciones = catalogo.filter(c => c.instalaciones?.length)
+      .map(c => ({ ...c, instalaciones: [...c.instalaciones] }));
     contenedor.innerHTML = `
       <div class="gestion-usuarios">
         <style>
@@ -930,6 +1072,11 @@
           <select id="rqSimInstalacion" disabled><option value="">Seleccionar instalación</option></select>
         </div>
         <p data-sim-estado role="status"></p>
+        <div class="gu-actions">
+          <button class="gu-mini" type="button" data-recuperar-historial>BUSCAR SIMULACROS RECUPERABLES</button>
+          <button class="gu-mini" type="button" data-descargar-rescate hidden>DESCARGAR COPIA DE RECUPERACIÓN</button>
+        </div>
+        <p data-estado-rescate role="status"></p>
         <details data-config-barras hidden>
           <summary>Configurar código de barras del informe</summary>
           <p><label>Seleccionar «Firma Codigo Barras.png» <input type="file" accept="image/png"></label></p>
@@ -945,15 +1092,46 @@
     const panel = contenedor.querySelector("[data-sim-panel]");
     let seleccion = 0;
     contenedor.querySelector(".rq-otros-volver").addEventListener("click", volver);
-    for (const cliente of organizaciones) {
-      organizacion.add(new Option(cliente.razon_social || cliente.codigo_cliente || cliente.id, cliente.id));
+    function cargarOrganizaciones() {
+      const elegida = organizacion.value;
+      organizacion.replaceChildren(new Option("Seleccionar organización", ""));
+      for (const cliente of organizaciones) {
+        organizacion.add(new Option(cliente.razon_social || cliente.codigo_cliente || cliente.id, cliente.id));
+      }
+      organizacion.value = elegida;
     }
+    cargarOrganizaciones();
+    const recuperar = contenedor.querySelector("[data-recuperar-historial]");
+    const exportar = contenedor.querySelector("[data-descargar-rescate]");
+    const estadoRescate = contenedor.querySelector("[data-estado-rescate]");
+    let rescatados = [];
+    recuperar.addEventListener("click", async () => {
+      recuperar.disabled = true;
+      estadoRescate.textContent = "Buscando simulacros que han quedado sin ficha…";
+      try {
+        const encontrados = await buscarSimulacrosSinFicha(catalogo);
+        if (!recuperar.isConnected) return;
+        rescatados = encontrados;
+        incluirFichasRecuperadas(organizaciones, catalogo, rescatados);
+        cargarOrganizaciones();
+        if (organizacion.value) organizacion.dispatchEvent(new Event("change"));
+        exportar.hidden = !rescatados.length;
+        estadoRescate.textContent = rescatados.length
+          ? `Simulacros recuperables: ${rescatados.length}. Selecciona la organización y la instalación marcada como recuperada.`
+          : "No se encontraron simulacros sin ficha en este perfil del navegador.";
+      } catch (_) {
+        estadoRescate.textContent = "No se pudo leer el historial de este perfil del navegador.";
+      } finally {
+        recuperar.disabled = false;
+      }
+    });
+    exportar.addEventListener("click", () => descargarRescateSimulacros(rescatados));
     if (!organizaciones.length) estado.textContent = "Da de alta una instalación en Gestión de Usuarios.";
     organizacion.addEventListener("change", () => {
       const cliente = organizaciones.find(c => String(c.id) === organizacion.value);
       instalacion.replaceChildren(new Option("Seleccionar instalación", ""));
       for (const i of cliente?.instalaciones || []) {
-        const etiqueta = [i.nombre, i.direccion, i.borrada && "Borrada · solo historial"].filter(Boolean).join(" · ");
+        const etiqueta = [i.nombre, i.direccion, i.borrada && "Borrada · solo historial", i.recuperada && "Recuperada · solo historial"].filter(Boolean).join(" · ");
         instalacion.add(new Option(etiqueta, i.id));
       }
       instalacion.disabled = !cliente;
@@ -970,7 +1148,7 @@
       const porPagina = 25;
       let pagina = 0;
       panel.innerHTML = `
-        ${sede.borrada ? "" : '<div class="gu-actions"><button class="gu-primary" type="button" data-alta>ALTA DE SIMULACRO</button></div>'}
+        ${sede.borrada || sede.recuperada ? "" : '<div class="gu-actions"><button class="gu-primary" type="button" data-alta>ALTA DE SIMULACRO</button></div>'}
         <div data-formulario hidden></div>
         <h2>Historial de la instalación</h2>
         <div data-historial></div>
