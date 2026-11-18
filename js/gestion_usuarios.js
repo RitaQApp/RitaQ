@@ -175,6 +175,17 @@
     return perfil === "CONSULTOR" || perfil === "SUPERADMIN";
   }
 
+  const DATOS_INSTALACION = {
+    nombre: "Denominación del centro",
+    codigo: "Código del centro",
+    direccion: "Dirección",
+    localidad: "Localidad",
+    codigoPostal: "Código postal",
+    telefono: "Teléfono",
+    email: "Correo electrónico",
+    niveles: "Niveles educativos"
+  };
+
   function mostrarInstalaciones() {
     cargarClientes();
     const opciones = clientes.map(c => `
@@ -193,16 +204,18 @@
           <form class="gu-form">
             <h3 class="gu-form-title">Alta de instalación</h3>
             <div class="gu-grid">
-              <div class="gu-field">
-                <label for="guInstalacionNombre">Nombre de la instalación</label>
-                <input id="guInstalacionNombre" name="nombre" required>
-              </div>
-              <div class="gu-field">
-                <label for="guInstalacionDireccion">Dirección (opcional)</label>
-                <input id="guInstalacionDireccion" name="direccion">
+              ${Object.entries(DATOS_INSTALACION).map(([campo, etiqueta]) => `
+                <div class="gu-field">
+                  <label for="guInstalacion-${campo}">${etiqueta}</label>
+                  <input id="guInstalacion-${campo}" name="${campo}" ${campo === "nombre" ? "required" : ""}>
+                </div>`).join("")}
+              <div class="gu-field full">
+                <label for="guInstalacionPlantas">Plantas (una por línea)</label>
+                <textarea id="guInstalacionPlantas" name="plantas" placeholder="Planta baja"></textarea>
               </div>
             </div>
             <div class="gu-actions">
+              <button class="gu-secondary" type="button" data-cancelar-instalacion hidden>CANCELAR</button>
               <button class="gu-primary" type="submit">DAR DE ALTA</button>
             </div>
             <p role="status"></p>
@@ -216,6 +229,25 @@
     const lista = host.querySelector("#guInstalacionesLista");
     const formulario = panel.querySelector("form");
     const estado = formulario.querySelector('[role="status"]');
+    const cancelar = formulario.querySelector("[data-cancelar-instalacion]");
+    const guardar = formulario.querySelector('[type="submit"]');
+    const titulo = formulario.querySelector("h3");
+    let editando = null;
+
+    function prepararFormulario(instalacion) {
+      formulario.reset();
+      editando = instalacion?.id ?? null;
+      titulo.textContent = instalacion ? "Editar instalación" : "Alta de instalación";
+      guardar.textContent = instalacion ? "GUARDAR CAMBIOS" : "DAR DE ALTA";
+      cancelar.hidden = !instalacion;
+      if (instalacion) {
+        for (const campo of Object.keys(DATOS_INSTALACION)) {
+          formulario.elements[campo].value = instalacion[campo] || "";
+        }
+        formulario.elements.plantas.value = (instalacion.plantas || []).join("\n");
+      }
+      estado.textContent = "";
+    }
 
     function seleccionada() {
       return clientes.find(c => String(c.id) === selector.value && selector.value !== "");
@@ -228,18 +260,30 @@
       lista.innerHTML = instalaciones.length ? `
         <div class="gu-table-wrap">
           <table class="gu-table">
-            <thead><tr><th scope="col">Instalación</th><th scope="col">Dirección</th></tr></thead>
+            <thead><tr><th scope="col">Instalación</th><th scope="col">Dirección</th><th scope="col">Acciones</th></tr></thead>
             <tbody>${instalaciones.map(i => `
-              <tr><td>${escapar(i.nombre)}</td><td>${escapar(i.direccion || "—")}</td></tr>`).join("")}</tbody>
+              <tr><td>${escapar(i.nombre)}</td><td>${escapar(i.direccion || "—")}</td>
+              <td><button class="gu-mini" type="button" data-editar-instalacion="${escapar(i.id)}">Editar</button></td></tr>`).join("")}</tbody>
           </table>
         </div>` : "<p>Esta organización todavía no tiene instalaciones.</p>";
     }
 
     selector.addEventListener("change", function () {
       cargarClientes();
-      formulario.reset();
-      estado.textContent = "";
+      prepararFormulario(null);
       mostrarLista(seleccionada());
+    });
+
+    cancelar.addEventListener("click", () => prepararFormulario(null));
+    lista.addEventListener("click", evento => {
+      const boton = evento.target.closest("[data-editar-instalacion]");
+      if (!boton) return;
+      cargarClientes();
+      const instalacion = seleccionada()?.instalaciones?.find(i => String(i.id) === boton.dataset.editarInstalacion);
+      if (instalacion) {
+        prepararFormulario(instalacion);
+        formulario.elements.nombre.focus();
+      }
     });
 
     formulario.addEventListener("submit", function (evento) {
@@ -251,32 +295,534 @@
         estado.textContent = "Selecciona una organización disponible.";
         return;
       }
-      const nombre = formulario.elements.nombre.value.trim();
-      const direccion = formulario.elements.direccion.value.trim();
+      const datos = Object.fromEntries(Object.keys(DATOS_INSTALACION).map(campo =>
+        [campo, formulario.elements[campo].value.trim()]));
+      const { nombre, direccion } = datos;
       if (!nombre) {
         estado.textContent = "Escribe el nombre de la instalación.";
         formulario.elements.nombre.focus();
         return;
       }
       const instalaciones = organizacion.instalaciones || [];
+      const anterior = instalaciones.find(i => i.id === editando);
+      if (editando !== null && !anterior) {
+        estado.textContent = "La instalación ya no está disponible.";
+        return;
+      }
+      const plantas = formulario.elements.plantas.value.split("\n").map(planta => planta.trim()).filter(Boolean);
+      if (new Set(plantas.map(planta => planta.toLocaleLowerCase("es"))).size !== plantas.length) {
+        estado.textContent = "Cada planta debe tener una denominación distinta.";
+        formulario.elements.plantas.focus();
+        return;
+      }
       const duplicada = instalaciones.some(i =>
+        i.id !== editando &&
         i.nombre.localeCompare(nombre, "es", { sensitivity: "accent" }) === 0 &&
         (i.direccion || "").localeCompare(direccion, "es", { sensitivity: "accent" }) === 0);
       if (duplicada) {
         estado.textContent = "Ya existe una instalación con ese nombre y dirección en esta organización.";
         return;
       }
-      organizacion.instalaciones = [...instalaciones, { id: crypto.randomUUID(), nombre, direccion }];
+      const instalacion = { ...anterior, ...datos, id: anterior?.id ?? crypto.randomUUID(), plantas };
+      organizacion.instalaciones = anterior
+        ? instalaciones.map(i => i.id === editando ? instalacion : i)
+        : [...instalaciones, instalacion];
       if (!guardarClientes()) {
         cargarClientes();
         estado.textContent = "No se pudo guardar la instalación en este navegador.";
         return;
       }
-      formulario.reset();
+      prepararFormulario(null);
       mostrarLista(organizacion);
       estado.textContent = "Instalación guardada en este navegador.";
       formulario.elements.nombre.focus();
     });
+  }
+
+  const SI_NO = ["Sí", "No"];
+  const SI_NO_EXISTE = ["Sí", "No", "No existe"];
+  const RECUENTOS = {
+    menores: "Número de menores",
+    docentes: "Número de docentes",
+    servicios: "Número de personal de servicios",
+    invitados: "Número de invitados",
+    menoresDm: "Menores con discapacidad o movilidad reducida",
+    personalDm: "Personal con discapacidad o movilidad reducida"
+  };
+  const VALORACIONES = {
+    plan: ["Programado según el Plan de Autoprotección", SI_NO],
+    participacion: ["Participación y colaboración de los docentes", ["Buena", "Media", "Baja"]],
+    comportamiento: ["Comportamiento de los menores", ["Bueno", "Regular", "Malo"]],
+    capacidad: ["Capacidad de las vías de evacuación", ["Suficiente", "Insuficiente"]],
+    interferencias: ["Interferencias entre plantas", SI_NO],
+    obstaculos: ["Obstáculos en las vías de evacuación", SI_NO],
+    estrechamientos: ["Estrechamientos peligrosos", SI_NO],
+    alarma: ["Sistemas de alarma", SI_NO_EXISTE],
+    alumbrado: ["Alumbrado de emergencia", SI_NO_EXISTE],
+    escaleras: ["Escaleras de emergencia", SI_NO_EXISTE],
+    gas: ["Gas", SI_NO_EXISTE],
+    electricidad: ["Electricidad", SI_NO_EXISTE],
+    gasoleo: ["Gasóleo", SI_NO_EXISTE],
+    agua: ["Agua", SI_NO_EXISTE]
+  };
+  const INCIDENCIAS = {
+    generales: "Generales",
+    tiempos: "Tiempos de evacuación",
+    menores: "Comportamiento de los menores",
+    vias: "Vías de evacuación",
+    medios: "Medios de emergencia",
+    imprevistas: "Imprevistas o sin clasificar"
+  };
+  const PREGUNTAS_ANEXO = [
+    "¿Se han utilizado las orientaciones de la Comunidad de Madrid sobre evacuación de personas con discapacidad en centros educativos públicos?",
+    "¿Se han identificado las necesidades de evacuación de las personas con discapacidad o movilidad reducida?",
+    "¿Se han identificado los medios disponibles para su evacuación?",
+    "¿Se ha constituido un equipo de ayuda para su evacuación?",
+    "¿Se han identificado las aulas y demás lugares en los que se encuentran habitualmente las personas con dificultades de movimiento?",
+    "¿Se han previsto los medios de evacuación y se ha asignado previamente a las personas responsables?",
+    "¿Se han previsto procedimientos para comunicar la emergencia a personas con limitaciones sensoriales?",
+    "¿Se conocían el equipo de ayuda, su localización y las acciones que debía realizar?",
+    "¿Eran adecuados los puntos de reunión y los recorridos de evacuación previstos?",
+    "¿Se han previsto medios y procedimientos de transporte para personas heridas o con discapacidad?",
+    "¿Se ha comprobado la evacuación de todas las personas y se ha prestado a cada una la ayuda adecuada?"
+  ];
+
+  function abrirRegistroSimulacros() {
+    return new Promise((resolver, rechazar) => {
+      const peticion = indexedDB.open("RitaQ-simulacros", 1);
+      peticion.onupgradeneeded = () => {
+        const almacen = peticion.result.createObjectStore("simulacros", { keyPath: "id" });
+        almacen.createIndex("instalacionFecha", ["organizacionId", "instalacionId", "fecha", "hora", "id"]);
+      };
+      peticion.onsuccess = () => resolver(peticion.result);
+      peticion.onerror = () => rechazar(peticion.error);
+    });
+  }
+
+  async function guardarSimulacro(registro) {
+    const db = await abrirRegistroSimulacros();
+    try {
+      await new Promise((resolver, rechazar) => {
+        const transaccion = db.transaction("simulacros", "readwrite");
+        transaccion.oncomplete = resolver;
+        transaccion.onabort = () => rechazar(transaccion.error);
+        transaccion.objectStore("simulacros").add(registro);
+      });
+    } finally {
+      db.close();
+    }
+  }
+
+  async function consultarSimulacros(organizacionId, instalacionId, pagina, porPagina) {
+    const db = await abrirRegistroSimulacros();
+    try {
+      return await new Promise((resolver, rechazar) => {
+        const indice = db.transaction("simulacros").objectStore("simulacros").index("instalacionFecha");
+        const prefijo = [organizacionId, instalacionId];
+        const rango = IDBKeyRange.bound(prefijo, [...prefijo, []]);
+        const peticion = indice.openCursor(rango, "prev");
+        const registros = [];
+        let saltar = pagina * porPagina;
+        peticion.onerror = () => rechazar(peticion.error);
+        peticion.onsuccess = () => {
+          const cursor = peticion.result;
+          if (!cursor || registros.length > porPagina) {
+            resolver(registros);
+          } else if (saltar) {
+            cursor.advance(saltar);
+            saltar = 0;
+          } else {
+            registros.push(cursor.value);
+            cursor.continue();
+          }
+        };
+      });
+    } finally {
+      db.close();
+    }
+  }
+
+  function campoSimulacro(campo, etiqueta, atributos = "") {
+    return `<div class="gu-field"><label for="rq-sim-${campo}">${etiqueta}</label>
+      <input id="rq-sim-${campo}" name="${campo}" ${atributos}></div>`;
+  }
+
+  function textoSimulacro(campo, etiqueta) {
+    return `<div class="gu-field"><label for="rq-sim-${campo}">${etiqueta}</label>
+      <textarea id="rq-sim-${campo}" name="${campo}"></textarea></div>`;
+  }
+
+  function opcionesSimulacro(campo, etiqueta, opciones) {
+    return `<fieldset><legend>${etiqueta}</legend>
+      ${opciones.map(opcion => `<label style="display:inline-block;margin:0 1em .35em 0">
+        <input type="radio" name="${campo}" value="${opcion}" required> ${opcion}</label>`).join("")}
+    </fieldset>`;
+  }
+
+  function tiempoSimulacro(campo, titulo) {
+    return `<fieldset><legend>${titulo}</legend><div class="gu-grid">
+      ${campoSimulacro(campo + "Min", "Minutos", 'type="number" min="0" max="9999" required')}
+      ${campoSimulacro(campo + "Seg", "Segundos", 'type="number" min="0" max="59" required')}
+    </div></fieldset>`;
+  }
+
+  function formularioSimulacro(instalacion) {
+    const opciones = (...campos) => campos.map(campo => opcionesSimulacro(campo, ...VALORACIONES[campo])).join("");
+    const plantas = instalacion.plantas || [];
+    return `
+      <form class="gu-form">
+        <h2 class="gu-form-title">Alta de simulacro realizado</h2>
+        <div class="gu-grid">
+          ${campoSimulacro("fecha", "Fecha del simulacro", 'type="date" required')}
+          ${campoSimulacro("hora", "Hora de inicio", 'type="time" required')}
+          ${Object.entries(RECUENTOS).map(([campo, etiqueta]) =>
+            campoSimulacro(campo, etiqueta, 'type="number" min="0" max="10000000" required')).join("")}
+        </div>
+        <h3>Tiempos reales de la evacuación</h3>
+        <p>Los dos tiempos totales se miden desde que suena la alarma.</p>
+        ${tiempoSimulacro("edificio", "Evacuación del edificio")}
+        ${tiempoSimulacro("recuento", "Hasta el punto de reunión y recuento")}
+        ${plantas.map((planta, i) => `<fieldset><legend>${escapar(planta)}</legend>
+          ${tiempoSimulacro("planta" + i, "Tiempo de evacuación de la planta")}
+          ${campoSimulacro("evacuados" + i, "Número de evacuados", 'type="number" min="0" max="10000000" required')}
+        </fieldset>`).join("")}
+        <h3>Desarrollo del simulacro</h3>
+        ${opciones("plan", "participacion", "comportamiento")}
+        <h3>Vías de evacuación</h3>
+        ${opciones("capacidad", "interferencias", "obstaculos", "estrechamientos")}
+        <h3>Medios de emergencia utilizados</h3>
+        ${opciones("alarma", "alumbrado", "escaleras")}
+        <h3>Pudieron cortarse los suministros de</h3>
+        ${opciones("gas", "electricidad", "gasoleo", "agua")}
+        <h3>Incidencias y observaciones</h3>
+        ${Object.entries(INCIDENCIAS).map(([campo, etiqueta]) => textoSimulacro("inc-" + campo, etiqueta)).join("")}
+        ${textoSimulacro("accidentes", "Accidentes de personas")}
+        ${textoSimulacro("deteriorosEdificio", "Deterioros en el edificio")}
+        ${textoSimulacro("deteriorosMobiliario", "Deterioros en el mobiliario")}
+        <h3>Balance general del simulacro</h3>
+        ${textoSimulacro("conclusiones", "Conclusiones")}
+        ${textoSimulacro("pedagogicas", "Conclusiones pedagógicas")}
+        ${textoSimulacro("balance", "Balance general")}
+        ${textoSimulacro("sugerencias", "Sugerencias")}
+        <div class="gu-grid">
+          ${campoSimulacro("director", "Director/a")}
+          ${campoSimulacro("tecnico", "Técnico/a")}
+        </div>
+        <h3>Anexo de discapacidad o movilidad reducida</h3>
+        <label><input type="checkbox" name="invitadosDm"> Hay invitados con discapacidad o movilidad reducida</label>
+        <p data-anexo-na>N/A</p>
+        <fieldset data-anexo hidden disabled>
+          <legend>Cuestionario complementario</legend>
+          ${PREGUNTAS_ANEXO.map((pregunta, i) => `
+            ${opcionesSimulacro("anexo" + i, (i + 1) + ". " + pregunta, [...SI_NO, "N/A"])}
+            ${textoSimulacro("anexoObs" + i, "Observaciones de la pregunta " + (i + 1))}
+          `).join("")}
+        </fieldset>
+        <div class="gu-actions"><button class="gu-primary" type="submit">GUARDAR SIMULACRO</button></div>
+        <p role="status"></p>
+      </form>`;
+  }
+
+  function datosSimulacro(formulario, organizacion, instalacion) {
+    const datos = new FormData(formulario);
+    const texto = campo => String(datos.get(campo) ?? "").trim();
+    const numero = campo => Number(texto(campo));
+    const tiempo = campo => numero(campo + "Min") * 60 + numero(campo + "Seg");
+    const recuentos = Object.fromEntries(Object.keys(RECUENTOS).map(campo => [campo, numero(campo)]));
+    if (recuentos.menoresDm > recuentos.menores || recuentos.personalDm > recuentos.docentes + recuentos.servicios) {
+      throw new Error("Los recuentos de discapacidad o movilidad reducida deben estar incluidos en los totales.");
+    }
+    const edificio = tiempo("edificio");
+    const recuento = tiempo("recuento");
+    if (recuento < edificio) throw new Error("El tiempo hasta el recuento debe ser igual o posterior a la evacuación del edificio.");
+    const plantas = (instalacion.plantas || []).map((nombre, i) =>
+      ({ nombre, tiempo: tiempo("planta" + i), evacuados: numero("evacuados" + i) }));
+    const datosCentro = Object.fromEntries(Object.keys(DATOS_INSTALACION).map(campo => [campo, instalacion[campo] || ""]));
+    return {
+      id: crypto.randomUUID(),
+      organizacionId: String(organizacion.id),
+      instalacionId: String(instalacion.id),
+      centro: datosCentro,
+      fecha: texto("fecha"),
+      hora: texto("hora"),
+      recuentos, edificio, recuento, plantas,
+      valoraciones: Object.fromEntries(Object.keys(VALORACIONES).map(campo => [campo, texto(campo)])),
+      incidencias: Object.fromEntries(Object.keys(INCIDENCIAS).map(campo => [campo, texto("inc-" + campo)])),
+      accidentes: texto("accidentes"),
+      deteriorosEdificio: texto("deteriorosEdificio"),
+      deteriorosMobiliario: texto("deteriorosMobiliario"),
+      conclusiones: texto("conclusiones"),
+      pedagogicas: texto("pedagogicas"),
+      balance: texto("balance"),
+      sugerencias: texto("sugerencias"),
+      director: texto("director"),
+      tecnico: texto("tecnico"),
+      anexo: datos.has("anexo0") ? PREGUNTAS_ANEXO.map((_, i) =>
+        ({ respuesta: texto("anexo" + i), observaciones: texto("anexoObs" + i) })) : null
+    };
+  }
+
+  function fechaInforme(fecha) {
+    return fecha.split("-").reverse().join("/");
+  }
+
+  function informeSimulacro(registro) {
+    const duracion = segundos => Math.floor(segundos / 60) + " min " + segundos % 60 + " s";
+    const linea = (etiqueta, valor) => `<p><strong>${etiqueta}</strong> ${escapar(valor || valor === 0 ? valor : "—")}</p>`;
+    const bloque = (titulo, cuerpo) => `<section><h2>${titulo}</h2>${cuerpo}</section>`;
+    const seleccion = (opciones, elegida) => opciones.map(opcion =>
+      `<span class="respuesta"><span class="casilla${opcion === elegida ? " marcada" : ""}"></span>${opcion}</span>`).join(" ");
+    const valores = (...campos) => campos.map(campo => `
+      <p><strong>${VALORACIONES[campo][0]}</strong> ${seleccion(VALORACIONES[campo][1], registro.valoraciones[campo])}</p>`).join("");
+    const cabecera = Object.entries(DATOS_INSTALACION).map(([campo, nombre]) => linea(nombre, registro.centro[campo])).join("");
+    const totales = registro.plantas.length ? registro.plantas.reduce((suma, planta) => suma + planta.evacuados, 0) : "—";
+    const fila = (nombre, tiempo, evacuados) =>
+      `<tr><td>${escapar(nombre)}</td><td>${duracion(tiempo)}</td><td>${evacuados}</td></tr>`;
+    const tiempos = `
+      <table><thead><tr><th>Centro / planta</th><th>Tiempo controlado</th><th>N.º de evacuados</th></tr></thead>
+        <tbody>${fila("Total del centro", registro.edificio, totales)}
+          ${registro.plantas.map(planta => fila(planta.nombre, planta.tiempo, planta.evacuados)).join("")}
+        </tbody>
+      </table>
+      ${linea("Tiempo hasta el punto de reunión y recuento", duracion(registro.recuento))}`;
+    const firmas = `<div class="firmas">${linea("Director/a", registro.director)}${linea("Técnico/a", registro.tecnico)}</div>`;
+    const anexo = registro.anexo ? `
+      <table><thead><tr><th>N.º</th><th>Cuestionario</th><th>Sí</th><th>No</th><th>N/A</th><th>Observaciones</th></tr></thead>
+        <tbody>${PREGUNTAS_ANEXO.map((pregunta, i) => `<tr><td>${i + 1}</td><td>${pregunta}</td>
+          ${[...SI_NO, "N/A"].map(opcion => `<td><span class="casilla${registro.anexo[i].respuesta === opcion ? " marcada" : ""}"></span></td>`).join("")}
+          <td>${escapar(registro.anexo[i].observaciones)}</td></tr>`).join("")}</tbody>
+      </table>` : "<p><strong>N/A</strong></p>";
+    return `<article class="rq-informe">
+      <p class="anexo-numero">ANEXO III</p>
+      <h1>INFORME DE SIMULACRO DE EVACUACIÓN</h1>
+      ${bloque("Identificación del centro", cabecera)}
+      ${bloque("Desarrollo del simulacro",
+        linea("Fecha y hora", fechaInforme(registro.fecha) + " · " + registro.hora) +
+        valores("plan", "participacion") + linea("Incidencias generales", registro.incidencias.generales))}
+      ${bloque("Participantes", Object.entries(RECUENTOS).map(([campo, etiqueta]) => linea(etiqueta, registro.recuentos[campo])).join(""))}
+      ${bloque("Tiempos reales de la evacuación", tiempos + linea("Incidencias", registro.incidencias.tiempos))}
+      ${bloque("Comportamiento de los menores", valores("comportamiento") + linea("Incidencias", registro.incidencias.menores))}
+      <div class="hoja">
+        ${bloque("Vías de evacuación", valores("capacidad", "interferencias", "obstaculos", "estrechamientos") + linea("Incidencias", registro.incidencias.vias))}
+        ${bloque("Medios de emergencia utilizados", valores("alarma", "alumbrado", "escaleras") + linea("Incidencias", registro.incidencias.medios))}
+        ${bloque("Pudieron cortarse los suministros de", valores("gas", "electricidad", "gasoleo", "agua"))}
+        ${bloque("Incidentes imprevistos o sin clasificar", linea("Incidencias", registro.incidencias.imprevistas) +
+          linea("Accidentes de personas", registro.accidentes) + linea("Deterioros en el edificio", registro.deteriorosEdificio) +
+          linea("Deterioros en el mobiliario", registro.deteriorosMobiliario))}
+      </div>
+      <div class="hoja">${bloque("Balance general del simulacro",
+        linea("Conclusiones", registro.conclusiones) + linea("Conclusiones pedagógicas", registro.pedagogicas) +
+        linea("Balance general", registro.balance) + linea("Sugerencias", registro.sugerencias))}${firmas}</div>
+      <div class="hoja">
+        <h1>INFORME COMPLEMENTARIO SOBRE EL DESARROLLO DEL SIMULACRO ANUAL DE EVACUACIÓN EN RELACIÓN CON LAS PERSONAS CON DISCAPACIDAD O MOVILIDAD REDUCIDA</h1>
+        ${bloque("Identificación del centro", cabecera + linea("Fecha y hora", fechaInforme(registro.fecha) + " · " + registro.hora))}
+        ${anexo}${firmas}
+      </div>
+    </article>`;
+  }
+
+  const ESTILO_INFORME_SIMULACRO = `
+    .rq-informe { font-family: Tecnico, Arial, sans-serif; color: #111; overflow-wrap: anywhere; }
+    .rq-informe h1 { font-size: 15pt; line-height: 1.2; text-align: center; margin: 0 0 5mm; }
+    .rq-informe h2 { font-size: 12pt; margin: 0 0 2mm; text-transform: uppercase; }
+    .rq-informe section { border: 1px solid #333; padding: 2.5mm; margin: 0 0 2.5mm; }
+    .rq-informe p { margin: 0 0 1mm; white-space: pre-wrap; }
+    .rq-informe .anexo-numero { text-align: center; }
+    .rq-informe table { width: 100%; border-collapse: collapse; margin-bottom: 2mm; }
+    .rq-informe th, .rq-informe td { border: 1px solid #333; padding: 1mm; text-align: left; vertical-align: top; white-space: pre-wrap; }
+    .rq-informe .respuesta { display: inline-block; margin-left: 2mm; white-space: nowrap; }
+    .rq-informe .casilla { display: inline-block; box-sizing: border-box; width: 3mm; height: 3mm; border: 1px solid; margin-right: 1mm; vertical-align: middle; text-align: center; line-height: 2.5mm; }
+    .rq-informe .casilla.marcada::after { content: "X"; }
+    .rq-informe .firmas { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin-top: 3mm; }
+    .rq-informe .firmas p { padding-top: 10mm; border-bottom: 1px solid #333; }
+    @media print {
+      @page { size: A4; margin: 12mm; }
+      .rq-informe { font-size: 10.5pt; line-height: 1.15; }
+      .rq-informe .hoja { break-before: page; }
+      .rq-informe h1, .rq-informe h2 { break-after: avoid; }
+      .rq-informe tr, .rq-informe .firmas { break-inside: avoid; }
+    }`;
+
+  async function imprimirSimulacro(registro, estado) {
+    const ventana = window.open("", "_blank");
+    if (!ventana) {
+      estado.textContent = "Permite las ventanas emergentes para guardar el informe en PDF.";
+      return;
+    }
+    ventana.opener = null;
+    const regular = new URL("assets/tecnico_regular.ttf", document.baseURI).href;
+    const negrita = new URL("assets/tecnico_bold.ttf", document.baseURI).href;
+    ventana.document.open();
+    ventana.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8">
+      <title>${escapar("Simulacro - " + registro.centro.nombre + " - " + registro.fecha)}</title>
+      <style>@font-face{font-family:Tecnico;src:url("${regular}")}
+      @font-face{font-family:Tecnico;src:url("${negrita}");font-weight:700}
+      ${ESTILO_INFORME_SIMULACRO}</style></head><body>${informeSimulacro(registro)}</body></html>`);
+    ventana.document.close();
+    try {
+      await Promise.all([ventana.document.fonts.load("10pt Tecnico"), ventana.document.fonts.load("bold 10pt Tecnico")]);
+      if (!ventana.closed) ventana.print();
+    } catch (_) {
+      estado.textContent = "No se pudo cargar la fuente Técnica para imprimir el informe.";
+      ventana.close();
+    }
+  }
+
+  function mostrarSimulacros(contenedor, volver) {
+    if (!puedeGestionarInstalaciones()) return false;
+    cargarClientes();
+    const organizaciones = clientes.filter(c => c.instalaciones?.length);
+    contenedor.innerHTML = `
+      <div class="gestion-usuarios">
+        <style>
+          [data-formulario] input[type="radio"] {
+            appearance: none; width: 1em; height: 1em; margin: 0 .25em 0 0;
+            border: 1px solid currentColor; vertical-align: -0.1em;
+          }
+          [data-formulario] input[type="radio"]:checked { box-shadow: inset 0 0 0 .15em white; background: #0b5f82; }
+        </style>
+        <button class="rq-otros-volver" type="button">← Volver a Otros</button>
+        <div class="gu-filtros">
+          <label for="rqSimOrganizacion">Organización cliente</label>
+          <select id="rqSimOrganizacion"><option value="">Seleccionar organización</option></select>
+          <label for="rqSimInstalacion">Instalación</label>
+          <select id="rqSimInstalacion" disabled><option value="">Seleccionar instalación</option></select>
+        </div>
+        <p data-sim-estado role="status"></p>
+        <div data-sim-panel></div>
+      </div>`;
+    const organizacion = contenedor.querySelector("#rqSimOrganizacion");
+    const instalacion = contenedor.querySelector("#rqSimInstalacion");
+    const estado = contenedor.querySelector("[data-sim-estado]");
+    const panel = contenedor.querySelector("[data-sim-panel]");
+    let seleccion = 0;
+    contenedor.querySelector(".rq-otros-volver").addEventListener("click", volver);
+    for (const cliente of organizaciones) {
+      organizacion.add(new Option(cliente.razon_social || cliente.codigo_cliente || cliente.id, cliente.id));
+    }
+    if (!organizaciones.length) estado.textContent = "Da de alta una instalación en Gestión de Usuarios.";
+    organizacion.addEventListener("change", () => {
+      const cliente = organizaciones.find(c => String(c.id) === organizacion.value);
+      instalacion.replaceChildren(new Option("Seleccionar instalación", ""));
+      for (const i of cliente?.instalaciones || []) {
+        instalacion.add(new Option(i.direccion ? i.nombre + " · " + i.direccion : i.nombre, i.id));
+      }
+      instalacion.disabled = !cliente;
+      instalacion.dispatchEvent(new Event("change"));
+    });
+
+    instalacion.addEventListener("change", () => {
+      const actual = ++seleccion;
+      panel.replaceChildren();
+      estado.textContent = "";
+      const cliente = organizaciones.find(c => String(c.id) === organizacion.value);
+      const sede = cliente?.instalaciones.find(i => String(i.id) === instalacion.value);
+      if (!sede) return;
+      const porPagina = 25;
+      let pagina = 0;
+      panel.innerHTML = `
+        <div class="gu-actions"><button class="gu-primary" type="button" data-alta>ALTA DE SIMULACRO</button></div>
+        <div data-formulario hidden></div>
+        <h2>Historial de la instalación</h2>
+        <div data-historial></div>
+        <div data-informe></div>`;
+      const historial = panel.querySelector("[data-historial]");
+      const vista = panel.querySelector("[data-informe]");
+      const zonaFormulario = panel.querySelector("[data-formulario]");
+
+      async function listar() {
+        historial.textContent = "Cargando historial…";
+        try {
+          const registros = await consultarSimulacros(String(cliente.id), String(sede.id), pagina, porPagina);
+          if (actual !== seleccion || !historial.isConnected) return;
+          historial.replaceChildren();
+          for (const registro of registros.slice(0, porPagina)) {
+            const boton = document.createElement("button");
+            boton.type = "button";
+            boton.className = "gu-mini";
+            boton.textContent = fechaInforme(registro.fecha) + " · " + registro.hora + " · Ver informe";
+            const fila = document.createElement("p");
+            fila.append(boton);
+            historial.append(fila);
+            boton.addEventListener("click", () => {
+              vista.innerHTML = `<style>${ESTILO_INFORME_SIMULACRO}</style>
+                <div class="gu-actions"><button class="gu-primary" type="button">IMPRIMIR / GUARDAR PDF</button></div>
+                ${informeSimulacro(registro)}`;
+              vista.querySelector("button").addEventListener("click", () => imprimirSimulacro(registro, estado));
+              vista.scrollIntoView({ block: "start" });
+            });
+          }
+          if (!registros.length) historial.textContent = "Todavía no hay simulacros registrados en esta instalación.";
+          for (const [etiqueta, desplazamiento, disponible] of [
+            ["Anterior", -1, pagina > 0], ["Siguiente", 1, registros.length > porPagina]
+          ]) {
+            if (!disponible) continue;
+            const boton = document.createElement("button");
+            boton.type = "button";
+            boton.className = "gu-mini";
+            boton.textContent = etiqueta;
+            boton.addEventListener("click", () => { pagina += desplazamiento; listar(); });
+            historial.append(boton);
+          }
+        } catch (_) {
+          if (actual === seleccion) historial.textContent = "No se pudo consultar el historial de este navegador.";
+        }
+      }
+
+      panel.querySelector("[data-alta]").addEventListener("click", () => {
+        if (!sede.plantas?.length) {
+          estado.textContent = "Añade las plantas a la ficha de esta instalación en Gestión de Usuarios.";
+          return;
+        }
+        estado.textContent = "";
+        if (!zonaFormulario.hidden) {
+          zonaFormulario.querySelector("[name=fecha]").focus();
+          return;
+        }
+        zonaFormulario.innerHTML = formularioSimulacro(sede);
+        zonaFormulario.hidden = false;
+        const formulario = zonaFormulario.querySelector("form");
+        const mensaje = formulario.querySelector('[role="status"]');
+        const boton = formulario.querySelector('[type="submit"]');
+        const anexo = formulario.querySelector("[data-anexo]");
+        const na = formulario.querySelector("[data-anexo-na]");
+        formulario.elements.fecha.max = new Intl.DateTimeFormat("sv-SE").format(new Date());
+        formulario.elements.fecha.focus();
+        formulario.addEventListener("input", () => {
+          const aplica = Number(formulario.elements.menoresDm.value) > 0 ||
+            Number(formulario.elements.personalDm.value) > 0 || formulario.elements.invitadosDm.checked;
+          anexo.hidden = anexo.disabled = !aplica;
+          na.hidden = aplica;
+        });
+        formulario.addEventListener("submit", async evento => {
+          evento.preventDefault();
+          if (boton.disabled || !puedeGestionarInstalaciones()) return;
+          let registro;
+          try {
+            registro = datosSimulacro(formulario, cliente, sede);
+          } catch (error) {
+            mensaje.textContent = error.message;
+            return;
+          }
+          boton.disabled = true;
+          try {
+            await guardarSimulacro(registro);
+            if (actual !== seleccion || !formulario.isConnected) return;
+            zonaFormulario.hidden = true;
+            zonaFormulario.replaceChildren();
+            vista.replaceChildren();
+            estado.textContent = "Simulacro guardado en el historial de esta instalación.";
+            pagina = 0;
+            listar();
+          } catch (_) {
+            mensaje.textContent = "No se pudo guardar el simulacro en este navegador.";
+            boton.disabled = false;
+          }
+        });
+      });
+      listar();
+    });
+    return true;
   }
 
   // Permisos por organización (números de los botones del menú lateral).
@@ -1152,6 +1698,7 @@
   }
 
   window.RitaQGestionUsuarios = {
-    mostrar: mostrar
+    mostrar,
+    mostrarSimulacros
   };
 })();
