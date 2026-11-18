@@ -193,7 +193,7 @@
 
 <script src="js/sesion.js"></script>
 <script src="data/maestro_clientes.js"></script>
-<script src="js/gestion_usuarios.js"></script>
+<script src="js/gestion_usuarios.js?v=20261118-simulacros"></script>
 <script src="js/politicas_compromisos.js"></script>
 <script src="js/informacion_documentada.js"></script>
 <script>
@@ -354,6 +354,9 @@
     contenido.className = "";
     contenido.replaceChildren(crearGorditos(serviciosOtros, indice => {
       if(indice === 0) mostrarPlanesAutoproteccion(contenido);
+      if(indice === 2 && window.RitaQGestionUsuarios?.mostrarSimulacros?.(contenido, () => mostrarOtros(contenido))){
+        titulo.textContent = "Simulacros de Evacuación";
+      }
     }));
   }
 
