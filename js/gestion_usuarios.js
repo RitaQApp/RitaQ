@@ -146,8 +146,63 @@
             <span class="gu-gordito-arrow">›</span>
           </button>
 
+          <button class="gu-gordito" type="button" data-gu-tab="permisos">
+            <span class="gu-gordito-num">5</span>
+            <span><span class="gu-gordito-title">Permisos de acceso</span>
+            <span class="gu-gordito-sub">Asignación de visores laterales a cada organización cliente.</span></span>
+            <span class="gu-gordito-arrow">›</span>
+          </button>
+
         </div>
       </div>`;
+  }
+
+  // Permisos por organización (números de los botones del menú lateral).
+  const VISORES = [
+    [1, "Información Documentada y Sistema"],
+    [2, "Políticas y Compromisos"],
+    [3, "Análisis de Riesgos y Oportunidades"],
+    [4, "Grupos de Interés"],
+    [5, "Legislación y Normativa"],
+    [6, "Indicadores y Objetivos (CMI)"],
+    [7, "Recursos Humanos"],
+    [8, "Infraestructura y Mantenimiento"],
+    [9, "Producción, Equipos y Servicios"],
+    [10, "Mejora y Calidad"],
+    [11, "Impacto Ambiental"],
+    [12, "Otros"],
+    [13, "Avisos y Comunicaciones"]
+  ];
+
+  function mostrarPermisos(idSeleccionado) {
+    const opciones = clientes.map(c => `<option value="${escapar(c.id)}" ${String(c.id) === String(idSeleccionado) ? "selected" : ""}>${escapar(c.razon_social || c.codigo_cliente || c.id)}</option>`).join("");
+    host.innerHTML = `
+      <div class="gestion-usuarios">
+        ${barraVolver("Permisos de acceso a visores")}
+        <div class="gu-note">Los permisos pertenecen a la organización cliente y se aplican a todos sus accesos. El botón 0 está reservado al consultor.</div>
+        <div class="gu-filtros"><label for="guPermisosCliente">Organización cliente</label>
+          <select id="guPermisosCliente" class="gu-permisos-select"><option value="">Seleccionar organización</option>${opciones}</select></div>
+        <div id="guPermisosPanel"></div>
+      </div>`;
+    const selector = host.querySelector('#guPermisosCliente');
+    const panel = host.querySelector('#guPermisosPanel');
+    function actualizarPanel() {
+      const c = clientes.find(item => String(item.id) === selector.value);
+      if (!c) {panel.innerHTML = '<p>Selecciona una organización para gestionar sus permisos.</p>';return;}
+      const actuales = Array.isArray(c.permisos_visores) ? c.permisos_visores.map(Number) : [];
+      panel.innerHTML = `<form id="guPermisosForm"><div class="gu-permisos-lista">${VISORES.map(([n,t]) => `
+        <label class="gu-permisos-fila"><input type="checkbox" name="visor" value="${n}" ${actuales.includes(n) ? 'checked' : ''}><span><strong>${n}.</strong> ${escapar(t)}</span></label>`).join('')}</div>
+        <button type="submit" class="gu-tab active">GUARDAR PERMISOS</button>
+        <p id="guPermisosEstado" role="status" aria-live="polite"></p></form>`;
+      panel.querySelector('form').addEventListener('submit', function(ev) {
+        ev.preventDefault();
+        c.permisos_visores = Array.from(panel.querySelectorAll('input[name="visor"]:checked')).map(el => Number(el.value));
+        guardarClientes();
+        panel.querySelector('#guPermisosEstado').textContent = 'Permisos guardados en este navegador para ' + (c.razon_social || c.codigo_cliente || c.id) + '.';
+      });
+    }
+    selector.addEventListener('change', actualizarPanel);
+    actualizarPanel();
   }
 
   function barraVolver(titulo) {
@@ -950,6 +1005,7 @@
       if (destino === "informacion") mostrarInformacionUsuarios();
       if (destino === "credenciales") mostrarCredenciales();
       if (destino === "uso") mostrarUso();
+      if (destino === "permisos") mostrarPermisos();
 
       return;
     }
