@@ -108,15 +108,27 @@ const assign=()=>read('RITAQ_POLITICAS_ASIGNACIONES_V2')||{};
 const tienePoliticas=()=>Array.isArray(getDocs())&&getDocs().some(d=>d.estado!=='Obsoleto'&&((assign()[d.numeroMaestro]||assign()[d.id]||d.clientes||[]).some(id=>ids.has(String(id)))));
 const btn1=document.querySelector('#menuCliente [data-num="1"]');
 const btn2=document.querySelector('#menuCliente [data-num="2"]');
-function actualizar(){if(window.RitaQDocumentacion && RitaQDocumentacion.tieneCliente(cliente)){btn1.disabled=false;btn1.removeAttribute('aria-disabled')}else{btn1.disabled=true;btn1.setAttribute('aria-disabled','true')}if(tienePoliticas()){btn2.disabled=false;btn2.removeAttribute('aria-disabled')}else{btn2.disabled=true;btn2.setAttribute('aria-disabled','true')}}
+const autorizados = new Set(Array.isArray(cliente?.permisos_visores) ? cliente.permisos_visores.map(Number) : []);
+function actualizar(){
+ document.querySelectorAll('#menuCliente .menu-btn').forEach(b=>{
+  const n=Number(b.dataset.num);
+  const permitido=n!==0 && autorizados.has(n);
+  // Los módulos 1 y 2 mantienen sus controles de contenido.
+  const disponible=n===1 ? !!(window.RitaQDocumentacion && RitaQDocumentacion.tieneCliente(cliente))
+    : n===2 ? tienePoliticas() : true;
+  b.disabled=!(permitido && disponible);
+  b.setAttribute('aria-disabled',String(b.disabled));
+ });
+}
 actualizar();
 document.getElementById('menuCliente').addEventListener('click',e=>{
- const b=e.target.closest('button.menu-btn');if(!b||b.disabled||!['1','2'].includes(b.dataset.num))return;
+ const b=e.target.closest('button.menu-btn');if(!b||b.disabled||!autorizados.has(Number(b.dataset.num)))return;
  document.querySelectorAll('#menuCliente .menu-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');
  document.getElementById('panelInicio').hidden=true;document.getElementById('panelModulo').hidden=false;
  const contenido=document.getElementById('contenidoModulo');
  if(b.dataset.num==='1'){document.getElementById('tituloModulo').textContent='Información Documentada y Sistema';RitaQDocumentacion.cliente(contenido,cliente)}
- else{document.getElementById('tituloModulo').textContent='Políticas y Compromisos';RitaQPoliticasVisor.iniciar(contenido,document.getElementById('rq-politicas-cliente-estado'),sesion)}
+ else if(b.dataset.num==='2'){document.getElementById('tituloModulo').textContent='Políticas y Compromisos';RitaQPoliticasVisor.iniciar(contenido,document.getElementById('rq-politicas-cliente-estado'),sesion)}
+ else{document.getElementById('tituloModulo').textContent=b.dataset.title;contenido.replaceChildren();const aviso=document.createElement('p');aviso.textContent='Visor autorizado para esta organización. Su funcionalidad aún no está implementada en el entorno cliente.';contenido.append(aviso)}
 });
 document.getElementById('btnSalir').addEventListener('click',()=>{RitaQSesion.cerrar();location.href='index.html'});
 })();
