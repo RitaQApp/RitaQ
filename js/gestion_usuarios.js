@@ -798,10 +798,10 @@
   function definicionPdfSimulacro(informe, cartela) {
     return {
       pageSize: "A4",
-      pageMargins: [36, 36, 78, 36],
+      pageMargins: [78, 36, 36, 36],
       defaultStyle: { font: "Tecnico", fontSize: 10.5, lineHeight: 1.12, color: "#111111" },
-      background: (pagina, medida) => pagina === 1
-        ? { image: cartela, width: 42, height: 540, absolutePosition: { x: medida.width - 60, y: 145 } }
+      background: pagina => pagina === 1
+        ? { image: cartela, width: 42, height: 540, absolutePosition: { x: 18, y: 145 } }
         : null,
       content: bloquesExportados(informe)
     };
